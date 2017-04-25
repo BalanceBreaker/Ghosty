@@ -14,9 +14,6 @@ public interface Kernel32 extends StdCallLibrary {
 
     public Kernel32 INSTANCE = (Kernel32) Native.loadLibrary("Kernel32", Kernel32.class);
 
-    /**
-     * @see
-     */
     public class SYSTEM_POWER_STATUS extends Structure {
         public byte ACLineStatus;
         public byte BatteryFlag;

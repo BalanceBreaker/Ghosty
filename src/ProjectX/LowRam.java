@@ -38,6 +38,9 @@ public class LowRam implements Runnable {
                         telegramBotsApi.sendNachricht("Warning!\nBattery level is low! (" + batteryStatus.getBatteryLifePercent() + ")");
                         bat = true;
                     }
+
+                    if (proz >= 26 && bat)
+                        bat = false;
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
