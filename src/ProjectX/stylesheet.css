@@ -1,0 +1,14 @@
+.root{
+    -fx-font-size: 10pt;
+    -fx-font-family: "Courier New";
+    -fx-background: rgba(54,186,245, 1);
+    -fx-base: rgb(249, 249, 255);
+    -fx-border-color: rgba(97, 102, 105, 1);
+}
+.label:hover{
+    -fx-underline: true;
+}
+.label{
+    -fx-font-family: "Adobe Caslon Pro";
+    -fx-text-alignment: center;
+}
