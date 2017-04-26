@@ -77,7 +77,7 @@ public class Bot extends TelegramLongPollingBot {
     static boolean silent;
     TrayIcon trayIcon;
 
-    String changelog = "Battery Warning added!";
+    String changelog = "Ghosty now only turns red if there is an connection error!\nIf you write Ghosty a Message it will turn blue.";
 
     public Bot(String[] args) {
         config = read();
@@ -128,6 +128,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (!config.getName().contains(";")) {
             config.setName(this.name + ";");
+            System.out.println("Pika");
             sendNachricht("Changelog:\n" + changelog);
             writeConf();
         }
@@ -1202,7 +1203,7 @@ public class Bot extends TelegramLongPollingBot {
     public void setImage(int status) {
         if (!alive)
             return;
-        Image image = null;
+        Image image;
         switch (status) {
             default:
             case 0:
@@ -1213,6 +1214,9 @@ public class Bot extends TelegramLongPollingBot {
                 break;
             case 2:
                 image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/received.gif"));
+                break;
+            case 3:
+                image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/err.gif"));
                 break;
         }
         trayIcon.setImage(image);

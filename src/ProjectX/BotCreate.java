@@ -6,6 +6,7 @@ import javafx.embed.swing.JFXPanel;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
+import org.telegram.telegrambots.generics.BotSession;
 
 import javax.swing.*;
 import java.awt.*;
@@ -110,24 +111,24 @@ public class BotCreate {
             frame.setResizable(false);
             frame.setVisible(true);
         } else {
-            if(Bot.isAlive()){
-                SystemTray systemTray = SystemTray.getSystemTray();
-                for(TrayIcon k : systemTray.getTrayIcons())
-                    systemTray.remove(k);
-            }
             ApiContextInitializer.init();
-            starten(args);
+            Bot bot = new Bot(args);
+            starten(bot);
         }
     }
 
-    private static void starten(String[] args) throws InterruptedException {
+    private static void starten(Bot bot) throws InterruptedException {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-            telegramBotsApi.registerBot(new Bot(args));
+            telegramBotsApi.registerBot(bot);
         } catch (Exception e) {
+            //bo.stop();
+            System.out.println(e);
+            System.out.println("FAIL");
+            bot.setImage(3);
             Thread.sleep(5000);
-            starten(args);
-
+            starten(bot);
         }
+        bot.setImage(0);
     }
 }

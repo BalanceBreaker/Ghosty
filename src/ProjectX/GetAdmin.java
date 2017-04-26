@@ -82,7 +82,9 @@ public class GetAdmin extends Application {
                 System.out.println(ex + " Generell");
             }
             try {
-                starten();
+                ApiContextInitializer.init();
+                Bot bot = new Bot(new String[0]);
+                starten(bot);
             } catch (InterruptedException e1) {
                 System.out.println(e1);
             }
@@ -93,14 +95,16 @@ public class GetAdmin extends Application {
         launch(new String[0]);
     }
 
-    private static void starten() throws InterruptedException {
+    private static void starten(Bot bot) throws InterruptedException {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-            telegramBotsApi.registerBot(new Bot(new String[0]));
+            telegramBotsApi.registerBot(bot);
         } catch (Exception e) {
+            bot.setImage(3);
             Thread.sleep(5000);
-            starten();
+            starten(bot);
         }
+        bot.setImage(0);
     }
 
     public void stopConnection() {
