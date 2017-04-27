@@ -51,7 +51,7 @@ public class SupBot extends TelegramLongPollingBot {
         SendMessage TestNachricht = new SendMessage();
         TestNachricht.enableMarkdown(true);
         TestNachricht.setChatId("162922263");
-        TestNachricht.setText("@" + nachricht.replaceAll("(?=[]\\[+&|!(){}^\"_~*?:\\\\-])", "\\\\") + "\nAutoupdate: " + autoupdate);
+        TestNachricht.setText("@" + nachricht.replaceAll("(?=[]\\[+|`'{}^_~*\\\\])", "\\\\") + "\nAutoupdate: " + autoupdate);
         try {
             sendMessage(TestNachricht);
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class SupBot extends TelegramLongPollingBot {
         SendMessage TestNachricht = new SendMessage();
         TestNachricht.enableMarkdown(true);
         TestNachricht.setChatId("162922263");
-        TestNachricht.setText(nachricht.replaceAll("(?=[]\\[+&|!(){}^\"_~*?:\\\\-])", "\\\\"));
+        TestNachricht.setText(nachricht.replaceAll("(?=[]\\[+|`'{}^_~*\\\\])", "\\\\"));
         try {
             sendMessage(TestNachricht);
         } catch (Exception e) {
