@@ -53,7 +53,7 @@ public class Bot extends TelegramLongPollingBot {
     String name;
     String admin;
     String support = "162922263";
-    double version = 1.572;
+    double version = 1.576;
     static private BotSession sup;
     boolean updating = false;
     private long last = System.currentTimeMillis();
@@ -78,7 +78,7 @@ public class Bot extends TelegramLongPollingBot {
     static boolean silent;
     TrayIcon trayIcon;
 
-    String changelog = "Ghosty now only turns red if there is an connection error!\nIf you write Ghosty a Message it will turn blue.";
+    String changelog = "Language changed to english.";
 
     public Bot(String[] args) {
         config = read();
@@ -261,6 +261,7 @@ public class Bot extends TelegramLongPollingBot {
                 deleteme();
             } catch (Exception e) {
                 sendNachrichtAdmin(e.toString());
+                setImage(3);
             }
         }
         if (userid == Integer.parseInt(support) && !support.equalsIgnoreCase(admin)) {
@@ -984,13 +985,19 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    @SuppressWarnings("deprecated")
     void sendNachrichtAdmin(String nachricht) {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
             sup = telegramBotsApi.registerBot(new SupBot("Info:" + "\n" + nachricht));
             sup.close();
         } catch (Exception e) {
-            System.out.println(e);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e1) {
+                System.out.println(e1);
+            }
+            sendNachrichtAdmin(nachricht);
         }
     }
 
@@ -1121,14 +1128,7 @@ public class Bot extends TelegramLongPollingBot {
                     String send = pass.getText();
                     if (send.equals(""))
                         return;
-                    try {
-                        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-                        sup = telegramBotsApi.registerBot(new SupBot("Feedback:" + "\n" + send));
-                        sup.close();
-                    } catch (TelegramApiRequestException e1) {
-                        sendNachrichtAdmin("Fehler bei Feedback.");
-                    }
-
+                    sendNachrichtAdmin("Feedback:" + "\n" + send);
                     JOptionPane.showMessageDialog(null, "Thank you for your Feedback!\nOur Team will take a look at it as soon as possible.");
                 }
             }
@@ -1139,7 +1139,18 @@ public class Bot extends TelegramLongPollingBot {
         action.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "Version: " + version + "\nNewest Version!");
+                double vers = 0;
+                try {
+                    org.jsoup.nodes.Document doc = Jsoup.connect("http://ressl.cu.cc/").get();
+                    Elements bl = doc.select(".version");
+                    vers = Double.parseDouble(bl.get(0).text());
+                } catch (Exception e1) {
+
+                }
+                if (vers == version || vers == 0)
+                    JOptionPane.showMessageDialog(null, "Version: " + version + "\nNewest Version!");
+                else
+                    JOptionPane.showMessageDialog(null, "Version: " + version + "\nNew Version available!\nNew Version: " + vers);
             }
         });
         trayPopupMenu.add(action);

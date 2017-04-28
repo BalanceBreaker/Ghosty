@@ -1,5 +1,8 @@
 package ProjectX;
 
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
+
 import javax.swing.*;
 
 /**
@@ -7,27 +10,19 @@ import javax.swing.*;
  */
 public class test {
     public static void main(String[] args) throws InterruptedException {
-       /* Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
-        Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
-
-        //System.out.println(batteryStatus); // Shows result of toString() method.
-        System.out.println(batteryStatus);
-        Thread.sleep(120000);
-        Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
-        System.out.println(batteryStatus);
-        */
-        JPanel panel = new JPanel();
-        JLabel label = new JLabel("Please enter your new password:");
-        JPasswordField pass = new JPasswordField(10);
-        JPasswordField pass1 = new JPasswordField(10);
-        panel.add(label);
-        panel.add(pass);
-        panel.add(pass1);
-        panel.grabFocus();
-        String[] options = new String[]{"OK", "Cancel"};
-        int option = JOptionPane.showOptionDialog(null, panel, "Passwort",
-                JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
-                null, options, pass);
-        System.out.println(option);
+        double vers = 0;
+        try {
+            org.jsoup.nodes.Document doc = Jsoup.connect("http://balancebrek.ihostfull.com/").get();
+            System.out.println(doc.getAllElements().size());
+            Elements bl = doc.select("*");
+            System.out.println(bl.size());
+            vers = Double.parseDouble(bl.get(0).text());
+        } catch (Exception e1) {
+            System.out.println(e1);
+        }
+        if (vers == 0)
+            JOptionPane.showMessageDialog(null, "Version: " + 99 + "\nNewest Version!");
+        else
+            JOptionPane.showMessageDialog(null, "Version: " + 99 + "\nNew Version available!\nNew Version: " + vers);
     }
 }

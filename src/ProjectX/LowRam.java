@@ -1,5 +1,7 @@
 package ProjectX;
 
+import java.net.InetAddress;
+
 public class LowRam implements Runnable {
     long last = 0;
     long time = 0;
@@ -31,6 +33,7 @@ public class LowRam implements Runnable {
                     time = (long) elapsedTimeMin;
                     Runtime.getRuntime().gc();
                 }
+
                 Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
                 if (!batteryStatus.getBatteryLifePercent().startsWith("U")) {
                     int proz = Integer.parseInt(batteryStatus.getBatteryLifePercent().replace("%", ""));
