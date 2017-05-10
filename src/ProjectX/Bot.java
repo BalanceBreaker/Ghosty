@@ -53,7 +53,7 @@ public class Bot extends TelegramLongPollingBot {
     String name;
     String admin;
     String support = "162922263";
-    double version = 1.576;
+    double version = 1.58;
     static private BotSession sup;
     boolean updating = false;
     private long last = System.currentTimeMillis();
