@@ -4,8 +4,14 @@ package Chat;
  * Created by Alexander Ressl on 09.05.2017 11:47.
  */
 
+import ProjectX.Bot;
+import com.sun.org.apache.xpath.internal.SourceTree;
+
+import javax.swing.*;
+import java.awt.*;
 import java.net.*;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /*
@@ -17,13 +23,16 @@ public class Client {
     private ObjectInputStream sInput;        // to read from the socket
     private ObjectOutputStream sOutput;        // to write on the socket
     private Socket socket;
-
+    private SimpleDateFormat sdf;
     // if I use a GUI or not
     private ClientGUI cg;
 
     // the server, the port and the username
     private String server, username;
     private int port;
+    private boolean gone = false;
+    Bot bot;
+    Robot robot;
 
     /*
      *  Constructor called by console mode
@@ -33,19 +42,27 @@ public class Client {
      */
     Client(String server, int port, String username) {
         // which calls the common constructor with the GUI set to null
-        this(server, port, username, null);
+        this(server, port, username, null, null);
+        sdf = new SimpleDateFormat("HH:mm:ss");
     }
 
     /*
      * Constructor call when used from a GUI
      * in console mode the ClienGUI parameter is null
      */
-    Client(String server, int port, String username, ClientGUI cg) {
+    Client(String server, int port, String username, ClientGUI cg, Bot bot) {
         this.server = server;
         this.port = port;
         this.username = username;
         // save if we are in GUI mode or not
         this.cg = cg;
+        sdf = new SimpleDateFormat("HH:mm:ss");
+        this.bot = bot;
+        try {
+            robot = new Robot();
+        } catch (AWTException e) {
+            System.out.println(e);
+        }
     }
 
     /*
@@ -102,7 +119,7 @@ public class Client {
     /*
      * To send a message to the server
      */
-    void sendMessage(ChatMessage msg) {
+    public void sendMessage(ChatMessage msg) {
         try {
             if (msg.getType() != 1)
                 sOutput.writeObject(msg);
@@ -120,6 +137,7 @@ public class Client {
      * Close the Input/Output streams and disconnect not much to do in the catch clause
      */
     private void disconnect() {
+        gone = true;
         try {
             if (sInput != null) sInput.close();
         } catch (Exception e) {
@@ -228,16 +246,78 @@ public class Client {
         public void run() {
             while (true) {
                 try {
-                    String msg = (String) sInput.readObject();
+                    ChatMessage msg = (ChatMessage) sInput.readObject();
                     // if console mode print the message and add back the prompt
                     if (cg == null) {
-                        System.out.println(msg);
+                        System.out.println(msg.getMessage());
                         System.out.print("> ");
                     } else {
-                        cg.append(msg);
+                        String time = sdf.format(new Date());
+                        if (msg.getType() == 1) {
+                            if (msg.getUsername() == null)
+                                writeLocal(msg.getMessage());
+                            else
+                                writeLocal(time + " " + msg.getUsername() + " " + msg.getMessage());
+                        } else if (msg.getType() == 3) {
+                            writeLocal(time + " " + msg.getUsername() + " has uploaded a File!");
+                            int reply = JOptionPane.showConfirmDialog(null, "Do you wanna save the File(" + msg.getName() + ") uploaded from " + msg.getUsername() + "?", "Save?", JOptionPane.YES_NO_OPTION);
+                            if (reply == JOptionPane.YES_OPTION) {
+                                JFileChooser chooser = new JFileChooser();
+                                chooser.setCurrentDirectory(new java.io.File("."));
+                                chooser.setDialogTitle("Choose Folder");
+                                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                                //
+                                // disable the "All files" option.
+                                //
+                                chooser.setAcceptAllFileFilterUsed(false);
+                                //
+                                if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                                    String strFilePath = chooser.getSelectedFile() + "\\" + msg.getName();
+                                    try {
+                                        FileOutputStream fos = new FileOutputStream(strFilePath);
+                                        fos.write(msg.getB());
+                                        fos.close();
+                                    } catch (FileNotFoundException ex) {
+                                        System.out.println("FileNotFoundException : " + ex);
+                                    } catch (IOException ioe) {
+                                        System.out.println("IOException : " + ioe);
+                                    }
+                                    Runtime.getRuntime().exec("explorer.exe /select,\"" + strFilePath + "\"");
+                                } else {
+                                    writeLocal("File download canceled!");
+                                }
+
+                            } else
+                                writeLocal("File download canceled!");
+                        } else if (msg.getType() == 4 && !bot.isWriter() && bot.isReading()) {
+                            if (msg.isPress())
+                                robot.keyPress(msg.getKEY());
+                            else
+                                robot.keyRelease(msg.getKEY());
+                        } else if (msg.getType() == ChatMessage.VERSION) {
+                            if (bot.version != msg.getVersion()) {
+                                sendMessage(new ChatMessage(ChatMessage.UPDATE, ""));
+                            }
+                        } else if (msg.getType() == ChatMessage.UPDATE) {
+                            try {
+                                FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\IO.jar");
+                                fos.write(msg.getB());
+                                fos.close();
+                                File up = new File(System.getProperty("user.home") + "\\IO.jar");
+                                if (up.exists())
+                                    bot.update(up);
+                            } catch (FileNotFoundException ex) {
+                                System.out.println("FileNotFoundException : " + ex);
+                            } catch (IOException ioe) {
+                                System.out.println("IOException : " + ioe);
+                            }
+                        }
                     }
                 } catch (IOException e) {
-                    display("Server has close the connection!");
+                    if (gone)
+                        display("Connection has been closed!");
+                    else
+                        display("Server has close the connection!");
                     if (cg != null)
                         cg.connectionFailed();
                     break;
@@ -246,6 +326,10 @@ public class Client {
                 catch (ClassNotFoundException e2) {
                 }
             }
+        }
+
+        private void writeLocal(String str) {
+            cg.append(str + "\n");
         }
     }
 }

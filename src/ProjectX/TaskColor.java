@@ -24,8 +24,12 @@ public class TaskColor implements Runnable {
         if (!bot.updating)
             if (running)
                 run();
-            else
-                bot.setImage(0);
+            else {
+                if (bot.isUnread())
+                    bot.setImage(4);
+                else
+                    bot.setImage(0);
+            }
         active = false;
 
     }

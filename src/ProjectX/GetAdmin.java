@@ -33,7 +33,7 @@ public class GetAdmin extends Application {
     Label text = new Label();
     ProgressBar bar = new ProgressBar();
     FlowPane progressPane = new FlowPane(Orientation.HORIZONTAL);
-    Button but = new Button("Weiter");
+    Button but = new Button("Next");
     boolean closing = false;
 
     @Override
@@ -92,7 +92,7 @@ public class GetAdmin extends Application {
     }
 
     public static void los() {
-        launch(new String[0]);
+        launch();
     }
 
     private static void starten(Bot bot) throws InterruptedException {

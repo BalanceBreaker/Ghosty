@@ -56,8 +56,6 @@ public class Draw extends JFrame {
             JLabel label4 = new JLabel(imageIcon4);
             JLabel label5 = new JLabel(imageIcon5);
             JLabel label6 = new JLabel(imageIcon6);
-
-
             f1.add(label);
             f1.add(label1);
             f1.add(label3);

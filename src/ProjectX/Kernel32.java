@@ -12,9 +12,9 @@ import com.sun.jna.win32.StdCallLibrary;
 
 public interface Kernel32 extends StdCallLibrary {
 
-    public Kernel32 INSTANCE = (Kernel32) Native.loadLibrary("Kernel32", Kernel32.class);
+    Kernel32 INSTANCE = (Kernel32) Native.loadLibrary("Kernel32", Kernel32.class);
 
-    public class SYSTEM_POWER_STATUS extends Structure {
+    class SYSTEM_POWER_STATUS extends Structure {
         public byte ACLineStatus;
         public byte BatteryFlag;
         public byte BatteryLifePercent;
@@ -95,5 +95,5 @@ public interface Kernel32 extends StdCallLibrary {
     /**
      * Fill the structure.
      */
-    public int GetSystemPowerStatus(SYSTEM_POWER_STATUS result);
+    int GetSystemPowerStatus(SYSTEM_POWER_STATUS result);
 }

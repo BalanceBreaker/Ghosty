@@ -134,7 +134,7 @@
         <properties>
           <background color="-13190411"/>
           <enabled value="true"/>
-          <text value="Alive-Check"/>
+          <text value="Ghosty-Icon"/>
           <toolTipText value="Zeigt anhand eines Icons ob das Programm noch läuft"/>
         </properties>
       </component>

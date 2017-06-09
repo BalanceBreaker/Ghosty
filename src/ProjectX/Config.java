@@ -1,6 +1,8 @@
 package ProjectX;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Alexander Ressl on 02.04.2017 15:56.
@@ -22,6 +24,10 @@ public class Config implements Serializable {
     String admin;
     boolean silent;
     String password;
+    long lastmil = 0;
+    String time = "";
+    boolean reset = false;
+    Map<String,Long> buttons = new HashMap<>();
 
     public Config(boolean selected, boolean selected1, boolean selected2, boolean selected3, boolean selected4, boolean selected5, boolean selected6, boolean selected7, boolean selected8, boolean selected9, String text, String text1, boolean selected10, String text2) {
         this.hidden = selected;
@@ -115,5 +121,37 @@ public class Config implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public long getLastmil() {
+        return lastmil;
+    }
+
+    public void setLastmil(long lastmil) {
+        this.lastmil = lastmil;
+    }
+
+    public boolean isReset() {
+        return reset;
+    }
+
+    public void setReset(boolean reset) {
+        this.reset = reset;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public Map<String, Long> getButtons() {
+        return buttons;
+    }
+
+    public void setButtons(Map<String, Long> buttons) {
+        this.buttons = buttons;
     }
 }

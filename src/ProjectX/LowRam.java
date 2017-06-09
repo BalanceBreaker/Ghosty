@@ -24,8 +24,11 @@ public class LowRam implements Runnable {
                 Thread.sleep(60000);
                 long elapsedTimeMillis = System.currentTimeMillis() - last;
                 float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
-                if (System.currentTimeMillis() - lastc > 200000) {
+                if (telegramBotsApi.changed)
+                    telegramBotsApi.writeConf();
+                if (System.currentTimeMillis() - lastc > 205000) {
                     telegramBotsApi.setSilent(true);
+                    Thread.sleep(1000);
                     telegramBotsApi.retry();
                 }
                 lastc = System.currentTimeMillis();
@@ -33,7 +36,6 @@ public class LowRam implements Runnable {
                     time = (long) elapsedTimeMin;
                     Runtime.getRuntime().gc();
                 }
-
                 Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
                 if (!batteryStatus.getBatteryLifePercent().startsWith("U")) {
                     int proz = Integer.parseInt(batteryStatus.getBatteryLifePercent().replace("%", ""));

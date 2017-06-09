@@ -1,5 +1,10 @@
 package ProjectX;
 
+
+import Chat.ChatMessage;
+import lc.kra.system.keyboard.GlobalKeyboardHook;
+import lc.kra.system.keyboard.event.GlobalKeyAdapter;
+import lc.kra.system.keyboard.event.GlobalKeyEvent;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
@@ -11,13 +16,83 @@ import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by Alexander Ressl on 24.04.2017 14:25.
  */
 public class test {
-    public static void main(String[] args) throws Exception {
 
+    static boolean run = true;
+
+    public static LinkedHashMap<String, Long> sortHashMapByValues(
+            HashMap<String, Long> passedMap) {
+        java.util.List<String> mapKeys = new ArrayList<>(passedMap.keySet());
+        java.util.List<Long> mapValues = new ArrayList<>(passedMap.values());
+        Collections.sort(mapValues);
+        Collections.sort(mapKeys);
+
+        LinkedHashMap<String, Long> sortedMap =
+                new LinkedHashMap<>();
+
+        Iterator<Long> valueIt = mapValues.iterator();
+        while (valueIt.hasNext()) {
+            Long val = valueIt.next();
+            Iterator<String> keyIt = mapKeys.iterator();
+
+            while (keyIt.hasNext()) {
+                String key = keyIt.next();
+                Long comp1 = passedMap.get(key);
+                if (comp1.equals(val)) {
+                    keyIt.remove();
+                    sortedMap.put(key, val);
+                    break;
+                }
+            }
+        }
+        return sortedMap;
+    }
+
+    public static void main(String[] args) throws Exception {
+       /* HashMap<String, Long> blub = new HashMap<>();
+        blub.put("Hey", 5L);
+        blub.put("Huhu", 6L);
+        blub.put("AA", 1L);
+        System.out.println(blub);
+        blub = sortHashMapByValues(blub);
+        System.out.println(blub);
+        System.out.println((blub.keySet().toArray()[2]));
+
+/*
+
+        GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook();
+
+        System.out.println("Global keyboard hook successfully started, press [escape] key to shutdown.");
+        keyboardHook.addKeyListener(new GlobalKeyAdapter() {
+            @Override
+            public void keyPressed(GlobalKeyEvent event) {
+                System.out.println(event.getVirtualKeyCode());
+                ChatMessage  k = new ChatMessage(4, event.getVirtualKeyCode());
+                System.out.println(k.getKEY());
+                if (event.getVirtualKeyCode() == GlobalKeyEvent.VK_ESCAPE)
+                    run = false;
+            }
+
+            @Override
+            public void keyReleased(GlobalKeyEvent event) {
+                System.out.println(event);
+            }
+        });
+
+        try {
+            while (run) Thread.sleep(128);
+        } catch (InterruptedException e) { /* nothing to do here  } finally {
+            keyboardHook.shutdownHook();
+        }
+
+      /*  File x = new File("C:\\Users\\areco\\Desktop\\PRO64.exe");
+        System.out.println(x.length());
         byte[] b = createChecksum("C:\\Users\\areco\\Desktop\\duplicate.txt");
         Thread.sleep(5000);
         byte[] b1 = createChecksum("C:\\Users\\areco\\Desktop\\duplicate.txt");
