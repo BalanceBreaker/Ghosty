@@ -30,14 +30,15 @@ public class Detect implements Runnable {
                     case 0:
                         bot.sendNachricht("Benutzung erkannt!\nAlarm.");
                         if (bot.camera)
-                            bot.takepic();
+                            bot.takepic(true);
                         break;
                     case 1:
-                        bot.sendNachricht("Benutzung erkannt! PC wird gesperrt!");
+                        bot.sendNachricht("Thread detected! PC locked!");
                         try {
                             Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
+                            bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode alpha 0183");
                             if (bot.camera)
-                                bot.takepic();
+                                bot.takepic(true);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -46,7 +47,7 @@ public class Detect implements Runnable {
                         bot.sendNachricht("Benutzung erkannt! PC sleept!");
                         try {
                             Runtime.getRuntime().exec("Rundll32.exe powrprof.dll,SetSuspendState Sleep");
-                            bot.takepic();
+                            bot.takepic(true);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

@@ -258,38 +258,37 @@ public class Client {
                                 writeLocal(msg.getMessage());
                             else
                                 writeLocal(time + " " + msg.getUsername() + " " + msg.getMessage());
-                        } else if (msg.getType() == 3) {
-                            writeLocal(time + " " + msg.getUsername() + " has uploaded a File!");
-                            int reply = JOptionPane.showConfirmDialog(null, "Do you wanna save the File(" + msg.getName() + ") uploaded from " + msg.getUsername() + "?", "Save?", JOptionPane.YES_NO_OPTION);
-                            if (reply == JOptionPane.YES_OPTION) {
-                                JFileChooser chooser = new JFileChooser();
-                                chooser.setCurrentDirectory(new java.io.File("."));
-                                chooser.setDialogTitle("Choose Folder");
-                                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                                //
-                                // disable the "All files" option.
-                                //
-                                chooser.setAcceptAllFileFilterUsed(false);
-                                //
-                                if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                                    String strFilePath = chooser.getSelectedFile() + "\\" + msg.getName();
-                                    try {
-                                        FileOutputStream fos = new FileOutputStream(strFilePath);
-                                        fos.write(msg.getB());
-                                        fos.close();
-                                    } catch (FileNotFoundException ex) {
-                                        System.out.println("FileNotFoundException : " + ex);
-                                    } catch (IOException ioe) {
-                                        System.out.println("IOException : " + ioe);
+                        } else if (msg.getType() == ChatMessage.DATA) {
+                            if(msg.getUsername().equalsIgnoreCase(username))
+                                writeLocal("File upload complete!");
+                            else {
+                                writeLocal(time + " " + msg.getUsername() + " has uploaded a File!");
+                                int reply = JOptionPane.showConfirmDialog(null, "Do you wanna save the File(" + msg.getName() + ") uploaded from " + msg.getUsername() + "?", "Save?", JOptionPane.YES_NO_OPTION);
+                                if (reply == JOptionPane.YES_OPTION) {
+                                    JFileChooser chooser = new JFileChooser();
+                                    chooser.setCurrentDirectory(new java.io.File("."));
+                                    chooser.setDialogTitle("Choose Folder");
+                                    chooser.setAcceptAllFileFilterUsed(false);
+                                    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                                        String strFilePath = chooser.getSelectedFile() + "\\" + msg.getName();
+                                        try {
+                                            FileOutputStream fos = new FileOutputStream(strFilePath);
+                                            fos.write(msg.getB());
+                                            fos.close();
+                                        } catch (FileNotFoundException ex) {
+                                            System.out.println("FileNotFoundException : " + ex);
+                                        } catch (IOException ioe) {
+                                            System.out.println("IOException : " + ioe);
+                                        }
+                                        Runtime.getRuntime().exec("explorer.exe /select,\"" + strFilePath + "\"");
+                                    } else {
+                                        writeLocal("File download canceled!");
                                     }
-                                    Runtime.getRuntime().exec("explorer.exe /select,\"" + strFilePath + "\"");
-                                } else {
-                                    writeLocal("File download canceled!");
-                                }
 
-                            } else
-                                writeLocal("File download canceled!");
-                        } else if (msg.getType() == 4 && !bot.isWriter() && bot.isReading()) {
+                                } else
+                                    writeLocal("File download canceled!");
+                            }
+                        } else if (msg.getType() == ChatMessage.KEY && !bot.isWriter() && bot.isReading()) {
                             if (msg.isPress())
                                 robot.keyPress(msg.getKEY());
                             else

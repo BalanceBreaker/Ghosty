@@ -88,10 +88,16 @@ public class ClientGUI extends JFrame implements ActionListener {
         JPanel centerPanel = new JPanel(new FlowLayout());
         ta.setDropTarget(new DropTarget() {
             public synchronized void drop(DropTargetDropEvent evt) {
-                UploadThread uploadThread = new UploadThread(evt,client,ta);
-                Thread run = new Thread(uploadThread);
-                run.setDaemon(true);
-                run.start();
+                try {
+                    evt.acceptDrop(DnDConstants.ACTION_COPY);
+                    java.util.List<File> droppedFiles = (java.util.List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    Thread run = new Thread(new UploadThread(droppedFiles,client,ta));
+                    run.start();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    ta.append(ex.toString());
+                }
+
             }
         });
         centerPanel.add(new JScrollPane(ta));
@@ -143,7 +149,7 @@ public class ClientGUI extends JFrame implements ActionListener {
         });
         //this.setVisible(true);
         setSize(600, 600);
-        setVisible(true);
+        //setVisible(true);
         tf.requestFocus();
 
     }
@@ -171,7 +177,6 @@ public class ClientGUI extends JFrame implements ActionListener {
         label.setText("Enter your username below");
         tf.setEditable(true);
         text.setEditable(false);
-        tf.setText("");
         // reset port number and host name as a construction time
         tfPort.setText("" + defaultPort);
         tfServer.setText(defaultHost);
@@ -246,7 +251,7 @@ public class ClientGUI extends JFrame implements ActionListener {
             // test if we can start the Client
             if (!client.start())
                 return;
-//            bot.setClient(client);
+            bot.setClient(client);
             tf.setText(username);
             label.setText("Hello " + username);
             label1.setText("Enter your message below");

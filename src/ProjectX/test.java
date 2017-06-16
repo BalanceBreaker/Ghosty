@@ -2,6 +2,8 @@ package ProjectX;
 
 
 import Chat.ChatMessage;
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamResolution;
 import lc.kra.system.keyboard.GlobalKeyboardHook;
 import lc.kra.system.keyboard.event.GlobalKeyAdapter;
 import lc.kra.system.keyboard.event.GlobalKeyEvent;
@@ -9,7 +11,11 @@ import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,6 +23,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -25,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class test {
 
     static boolean run = true;
+    private static TrayIcon trayIcon;
 
     public static LinkedHashMap<String, Long> sortHashMapByValues(
             HashMap<String, Long> passedMap) {
@@ -55,6 +63,44 @@ public class test {
     }
 
     public static void main(String[] args) throws Exception {
+        if (!SystemTray.isSupported()) {
+            return;
+        }
+        SystemTray systemTray = SystemTray.getSystemTray();
+        //get the systemTray of the system
+        //get default toolkit
+        //Toolkit toolkit = Toolkit.getDefaultToolkit();
+        //get image
+        //Toolkit.getDefaultToolkit().getImage("src/resources/busylogo.jpg");
+        String was = "windowsdefender_taskbaricon.png";
+        //String was = "audio.png";
+        Image image = Toolkit.getDefaultToolkit().getImage(("D:\\Downloads\\" + was));
+
+        //popupmenu
+        PopupMenu trayPopupMenu = new PopupMenu();
+
+
+        //2nd menuitem of popupmenu
+        MenuItem close = new MenuItem("Close");
+        close.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        trayPopupMenu.add(close);
+
+        //setting tray icon
+        trayIcon = new TrayIcon(image, "Ghosty", trayPopupMenu);
+        //adjust to default size as per system recommendation
+        trayIcon.setImageAutoSize(true);
+
+
+        try {
+            systemTray.add(trayIcon);
+        } catch (AWTException awtException) {
+            awtException.printStackTrace();
+        }
        /* HashMap<String, Long> blub = new HashMap<>();
         blub.put("Hey", 5L);
         blub.put("Huhu", 6L);

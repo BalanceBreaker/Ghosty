@@ -27,6 +27,7 @@ public class Config implements Serializable {
     long lastmil = 0;
     String time = "";
     boolean reset = false;
+    boolean mute = false;
     Map<String,Long> buttons = new HashMap<>();
 
     public Config(boolean selected, boolean selected1, boolean selected2, boolean selected3, boolean selected4, boolean selected5, boolean selected6, boolean selected7, boolean selected8, boolean selected9, String text, String text1, boolean selected10, String text2) {
@@ -153,5 +154,13 @@ public class Config implements Serializable {
 
     public void setButtons(Map<String, Long> buttons) {
         this.buttons = buttons;
+    }
+
+    public boolean isMute() {
+        return mute;
+    }
+
+    public void setMute(boolean mute) {
+        this.mute = mute;
     }
 }
