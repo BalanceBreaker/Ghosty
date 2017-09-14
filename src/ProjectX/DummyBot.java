@@ -22,6 +22,10 @@ public class DummyBot extends TelegramLongPollingBot {
     Config config;
     GetAdmin admin;
 
+    public DummyBot(String token){
+        this.token = token;
+        this.name = "ConnectionTest#1";
+    }
     public DummyBot(String token, String name, int random, Config config, GetAdmin admin) {
         this.token = token;
         this.name = name;
@@ -45,11 +49,11 @@ public class DummyBot extends TelegramLongPollingBot {
         String nachricht = update.getMessage().getText();
 
         if (nachricht.equalsIgnoreCase("/start")) {
-            sendNachricht("Bitte geben Sie den Code ein der auf Ihrem Gerät angezeigt wird.", update.getMessage().getChatId());
+            sendNachricht("Please enter the Code your device is showing.", update.getMessage().getChatId());
             admin.next();
         }
         if (nachricht.equalsIgnoreCase(random + "")) {
-            sendNachricht("Richtiger Code! Sie wurden als Admin verifiziert.\nBot wird nun installiert und Ihr Betriebssystem wird ihren Wünschen entsprechend angepasst.\nKamera könnte sich  möglicherweise aktivieren da Treiber konfiguriert werden.", update.getMessage().getChatId());
+            sendNachricht("Code correct! You have been verified, take a look at your device to finish the installation.", update.getMessage().getChatId());
             config.setAdmin(update.getMessage().getChatId() + "");
             admin.stopConnection();
         }

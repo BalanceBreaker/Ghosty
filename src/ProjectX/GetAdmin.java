@@ -33,16 +33,16 @@ public class GetAdmin extends Application {
     Label text = new Label();
     ProgressBar bar = new ProgressBar();
     FlowPane progressPane = new FlowPane(Orientation.HORIZONTAL);
-    Button but = new Button("Next");
+    Button but = new Button("Finish");
     boolean closing = false;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Admin Erkennung");
+        primaryStage.setTitle("Admin");
         FlowPane gesamt = new FlowPane(Orientation.VERTICAL);
         FlowPane textPane = new FlowPane(Orientation.HORIZONTAL);
         bar.setPrefWidth(200);
-        text.setText("Bitte warten.");
+        text.setText("Please wait.");
         textPane.getChildren().add(text);
         progressPane.getChildren().add(bar);
         gesamt.getChildren().addAll(textPane, progressPane);
@@ -58,10 +58,8 @@ public class GetAdmin extends Application {
         try {
             bum = telegramBotsApi.registerBot(new DummyBot(config.getToken(), config.getName(), randomNum, config, this));
         } catch (TelegramApiRequestException e) {
-            e.printStackTrace();
         }
-        System.out.println("Loaded!");
-        text.setText("Bitte schreibe dem Bot nun \"/start\"");
+        text.setText("Please text Ghosty now \"/start\"");
         but.setOnAction(e -> {
             closing = true;
             primaryStage.close();
@@ -112,7 +110,7 @@ public class GetAdmin extends Application {
         Platform.runLater(
                 () -> {
                     bar.setProgress(1);
-                    text.setText("Du wurdest erfolgreich verifiziert!");
+                    text.setText("You have been acceptet!");
                     progressPane.getChildren().remove(0);
                     progressPane.getChildren().add(but);
                 }

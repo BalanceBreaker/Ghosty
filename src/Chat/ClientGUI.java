@@ -91,7 +91,7 @@ public class ClientGUI extends JFrame implements ActionListener {
                 try {
                     evt.acceptDrop(DnDConstants.ACTION_COPY);
                     java.util.List<File> droppedFiles = (java.util.List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
-                    Thread run = new Thread(new UploadThread(droppedFiles,client,ta));
+                    Thread run = new Thread(new UploadThread(droppedFiles, client, ta));
                     run.start();
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -209,7 +209,9 @@ public class ClientGUI extends JFrame implements ActionListener {
         // ok it is coming from the JTextField
         if (connected) {
             // just have to send the message
-            client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, text.getText()));
+            if (text.getText().equalsIgnoreCase(""))
+                return;
+            client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, client.encrypt(text.getText())));
             text.setText("");
             text.setEditable(true);
             return;
@@ -247,7 +249,7 @@ public class ClientGUI extends JFrame implements ActionListener {
             }
 
             // try creating a new Client with GUI
-            client = new Client(server, port, username, this,bot);
+            client = new Client(server, port, username, this, bot);
             // test if we can start the Client
             if (!client.start())
                 return;

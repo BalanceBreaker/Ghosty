@@ -19,12 +19,12 @@ public class LowRam implements Runnable {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(60000);
+                Thread.sleep(5000);
                 long elapsedTimeMillis = System.currentTimeMillis() - last;
                 float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
                 if (bot.changed)
                     bot.writeConf();
-                if (System.currentTimeMillis() - lastc > 205000) {
+                if (System.currentTimeMillis() - lastc > 20000) {
                     bot.setSilent(true);
                     Thread.sleep(1000);
                     bot.retry();

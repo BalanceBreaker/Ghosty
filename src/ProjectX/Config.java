@@ -27,7 +27,7 @@ public class Config implements Serializable {
     long lastmil = 0;
     String time = "";
     boolean reset = false;
-    boolean mute = false;
+    boolean mute = true;
     Map<String,Long> buttons = new HashMap<>();
 
     public Config(boolean selected, boolean selected1, boolean selected2, boolean selected3, boolean selected4, boolean selected5, boolean selected6, boolean selected7, boolean selected8, boolean selected9, String text, String text1, boolean selected10, String text2) {

@@ -21,9 +21,10 @@ public class ChatMessage implements Serializable {
     // MESSAGE an ordinary message
     // LOGOUT to disconnect from the Server
     // DATA to send files between clients.
-    public static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, DATA = 3, KEY = 4, VERSION = 5, UPDATE = 6;
+    public static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, DATA = 3, KEY = 4, VERSION = 5, UPDATE = 6, REFRESH = 7;
     private int type;
     private String message;
+    private byte[] messageByte;
     private String username;
     private String name;
     int key;
@@ -68,6 +69,11 @@ public class ChatMessage implements Serializable {
         this.version = version;
     }
 
+    public ChatMessage(int type, byte[] encrypt) {
+        this.type = type;
+        this.messageByte = encrypt;
+    }
+
     // getters
     int getType() {
         return type;
@@ -103,6 +109,10 @@ public class ChatMessage implements Serializable {
 
     public double getVersion() {
         return version;
+    }
+
+    public byte[] getMessageByte() {
+        return messageByte;
     }
 }
 

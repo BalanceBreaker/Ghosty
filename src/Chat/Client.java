@@ -7,10 +7,13 @@ package Chat;
 import ProjectX.Bot;
 import com.sun.org.apache.xpath.internal.SourceTree;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.awt.*;
 import java.net.*;
 import java.io.*;
+import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -31,6 +34,7 @@ public class Client {
     private String server, username;
     private int port;
     private boolean gone = false;
+    private static final String key = "GustiLustig76543";
     Bot bot;
     Robot robot;
 
@@ -121,12 +125,7 @@ public class Client {
      */
     public void sendMessage(ChatMessage msg) {
         try {
-            if (msg.getType() != 1)
-                sOutput.writeObject(msg);
-            else if (!msg.getMessage().equalsIgnoreCase(""))
-                sOutput.writeObject(msg);
-
-
+            sOutput.writeObject(msg);
         } catch (IOException e) {
             display("Exception writing to server: " + e);
         }
@@ -255,11 +254,16 @@ public class Client {
                         String time = sdf.format(new Date());
                         if (msg.getType() == 1) {
                             if (msg.getUsername() == null)
-                                writeLocal(msg.getMessage());
+                                if (msg.getMessage() == null)
+                                    writeLocal(decrypt(msg.getMessageByte()));
+                                else
+                                    writeLocal(msg.getMessage());
+                            else if (msg.getMessage() == null)
+                                writeLocal(time + " " + msg.getUsername() + " " + decrypt(msg.getMessageByte()));
                             else
                                 writeLocal(time + " " + msg.getUsername() + " " + msg.getMessage());
                         } else if (msg.getType() == ChatMessage.DATA) {
-                            if(msg.getUsername().equalsIgnoreCase(username))
+                            if (msg.getUsername().equalsIgnoreCase(username))
                                 writeLocal("File upload complete!");
                             else {
                                 writeLocal(time + " " + msg.getUsername() + " has uploaded a File!");
@@ -330,6 +334,35 @@ public class Client {
         private void writeLocal(String str) {
             cg.append(str + "\n");
         }
+    }
+
+    byte[] encrypt(String message) {
+        byte[] backk = null;
+        try {
+            SecretKeySpec skeyspec = new SecretKeySpec(key.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, skeyspec);
+            backk = cipher.doFinal(message.getBytes());
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return backk;
+    }
+
+    private String decrypt(byte[] message) {
+        String back = "Error decrypting message!";
+        if (message != null)
+            try {
+                SecretKeySpec skeyspec = new SecretKeySpec(key.getBytes(), "AES");
+                Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+                cipher.init(Cipher.DECRYPT_MODE, skeyspec);
+                byte[] decrypted = cipher.doFinal(message);
+                back = new String(decrypted);
+
+            } catch (Exception e) {
+                back += e;
+            }
+        return back;
     }
 }
 

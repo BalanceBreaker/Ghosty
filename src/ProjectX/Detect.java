@@ -25,37 +25,42 @@ public class Detect implements Runnable {
             }
             Point c = MouseInfo.getPointerInfo().getLocation();
             if ((int) c.getX() != x || (int) c.getY() != y) {
-                switch (wasmachen) {
-                    default:
-                    case 0:
-                        bot.sendNachricht("Benutzung erkannt!\nAlarm.");
-                        if (bot.camera)
-                            bot.takepic(true);
-                        break;
-                    case 1:
-                        bot.sendNachricht("Thread detected! PC locked!");
-                        try {
-                            Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
-                            bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode alpha 0183");
-                            if (bot.camera)
-                                bot.takepic(true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case 2:
-                        bot.sendNachricht("Benutzung erkannt! PC sleept!");
-                        try {
-                            Runtime.getRuntime().exec("Rundll32.exe powrprof.dll,SetSuspendState Sleep");
-                            bot.takepic(true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                }
-                running = false;
+                breach();
             }
 
+        }
+    }
+
+    public void breach() {
+        running = false;
+        switch (wasmachen) {
+            default:
+            case 0:
+                bot.sendNachricht("Thread detected!\nAlarm.");
+                bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode Omega 0267");
+                if (bot.getConfig().isCamera())
+                    bot.takepic(true);
+                break;
+            case 1:
+                bot.sendNachricht("Thread detected! PC locked!");
+                try {
+                    Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
+                    bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode alpha 0183");
+                    if (bot.getConfig().isCamera())
+                        bot.takepic(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 2:
+                bot.sendNachricht("Benutzung erkannt! PC sleept!");
+                try {
+                    Runtime.getRuntime().exec("Rundll32.exe powrprof.dll,SetSuspendState Sleep");
+                    bot.takepic(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
         }
     }
 
