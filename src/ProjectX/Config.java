@@ -22,15 +22,11 @@ public class Config implements Serializable {
     String token;
     String name;
     String admin;
-    boolean silent;
-    String password;
-    long lastmil = 0;
-    String time = "";
-    boolean reset = false;
-    boolean mute = true;
-    Map<String,Long> buttons = new HashMap<>();
 
-    public Config(boolean selected, boolean selected1, boolean selected2, boolean selected3, boolean selected4, boolean selected5, boolean selected6, boolean selected7, boolean selected8, boolean selected9, String text, String text1, boolean selected10, String text2) {
+    String password;
+
+
+    public Config(boolean selected, boolean selected1, boolean selected2, boolean selected3, boolean selected4, boolean selected5, boolean selected6, boolean selected7, boolean selected8, boolean selected9, String text, String text1, String text2) {
         this.hidden = selected;
         this.autostart = selected1;
         this.startupNotification = selected2;
@@ -43,7 +39,6 @@ public class Config implements Serializable {
         this.alive = selected9;
         this.token = text;
         this.name = text1;
-        this.silent = selected10;
         this.password = text2;
     }
 
@@ -107,15 +102,6 @@ public class Config implements Serializable {
         this.name = name;
     }
 
-    public void setSilent(boolean silent) {
-        this.silent = silent;
-    }
-
-    public boolean isSilent() {
-
-        return silent;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -124,43 +110,5 @@ public class Config implements Serializable {
         this.password = password;
     }
 
-    public long getLastmil() {
-        return lastmil;
-    }
 
-    public void setLastmil(long lastmil) {
-        this.lastmil = lastmil;
-    }
-
-    public boolean isReset() {
-        return reset;
-    }
-
-    public void setReset(boolean reset) {
-        this.reset = reset;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public void setTime(String time) {
-        this.time = time;
-    }
-
-    public Map<String, Long> getButtons() {
-        return buttons;
-    }
-
-    public void setButtons(Map<String, Long> buttons) {
-        this.buttons = buttons;
-    }
-
-    public boolean isMute() {
-        return mute;
-    }
-
-    public void setMute(boolean mute) {
-        this.mute = mute;
-    }
 }

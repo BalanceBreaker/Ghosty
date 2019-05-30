@@ -100,45 +100,6 @@ public class test {
     private static JFrame f1;
 
     public static void main(String[] args) throws Exception {
-        GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook();
-
-        keyboardHook.addKeyListener(new GlobalKeyAdapter() {
-            @Override
-            public void keyPressed(GlobalKeyEvent event) {
-                System.out.println(event.getKeyChar());
-
-                if (event.getVirtualKeyCode() == GlobalKeyEvent.VK_ESCAPE) {
-                    run = false;
-
-                }
-                if (event.getVirtualKeyCode() == GlobalKeyEvent.VK_LWIN) {
-                    try {
-                        Robot carl = new Robot();
-                        //carl.keyPress(KeyEvent.VK_WINDOWS);
-                        carl.keyRelease(KeyEvent.VK_WINDOWS);
-                    } catch (Exception e) {
-                        System.out.println("oh noo");
-                    }
-                }
-
-            }
-
-            @Override
-            public void keyReleased(GlobalKeyEvent event) {
-                //PressKey.client.sendMessage(new ChatMessage(4, event.getVirtualKeyCode(),false));
-            }
-        });
-
-
-        try {
-            while (run) Thread.sleep(128);
-        } catch (InterruptedException e) { /* nothing to do here */ } finally {
-            keyboardHook.shutdownHook();
-        }
-
-
-        if (true)
-            return;
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] screens = ge.getScreenDevices();
         Rectangle allScreenBounds = new Rectangle();
@@ -165,17 +126,16 @@ public class test {
                 AffineTransform tx = AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
                 AffineTransform move;
                 if (positiv) {
-                    robot.mouseMove(degree * 3, (int) (degree * 0.5));
+                    // robot.mouseMove(degree * 3, (int) (degree * 0.5));
                     move = AffineTransform.getTranslateInstance(degree * 5, -degree);
                 } else {
-                    robot.mouseMove(degree * 2, (int) (degree * 1.5));
+                    //   robot.mouseMove(degree * 2, (int) (degree * 1.5));
                     move = AffineTransform.getTranslateInstance(-degree * 5, degree);
                 }
                 positiv = !positiv;
                 AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
                 AffineTransformOp moveOp = new AffineTransformOp(move, AffineTransformOp.TYPE_BILINEAR);
                 // g2.clearRect(0,0,100000,100000);
-
                 g2.drawImage(moveOp.filter(op.filter(image, null), null), 0, 0, null);
 
                 //g2.drawImage(moveOp.filter(image,null), 0, 0, null);
@@ -193,7 +153,7 @@ public class test {
             }
 
             void deadPixel(Graphics2D g2) {
-                Random rand = new Random();
+                //Random rand = new Random();
                 g2.setColor(new Color(0, 100, 0, 100));
                 g2.fillRect(0, 0, 50000000, 500000000);
                 //g2.fillRect(rand.nextInt((GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().width - 50 - 50) + 1) + 50, rand.nextInt((GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().height - 50 - 50) + 1) + 50,5,5);
@@ -206,13 +166,16 @@ public class test {
                 g.setColor(Color.WHITE);
                 //Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 Graphics2D g2 = (Graphics2D) g;
+                //Bildschirm unbrauchbar machen
+                // deadPixel(g2);
+                //  if (true)
+                //    return;
+               g2.drawImage(image,0,0,null);
 
-                deadPixel(g2);
-                if (true)
-                    return;
-                for (int i = 0; i <= 360; i += 2) {
+                /*for (int i = 0; i <= 360; i += 2) {
                     flip(g2, i, image);
                 }
+
                 BufferedImage image0 = robot.createScreenCapture(allScreenBounds);
                 for (int i = 0; i <= 360; i += 5) {
                     flip(g2, i, image0);
@@ -272,7 +235,8 @@ public class test {
                     shake(g2, i, image);
                 }
 
-
+*/
+                deadPixel(g2);
             }
 
             @Override
@@ -281,12 +245,13 @@ public class test {
             }
         };
         w.setAlwaysOnTop(true);
+
         w.setBounds(w.getGraphicsConfiguration().getBounds());
-        w.setBackground(new Color(0, true));
+        //w.setBackground(new Color(0, true));
         //JLabel label2 = new JLabel(imageIcon2);
         //w.add(label2);
         w.setAutoRequestFocus(true);
-        w.addMouseListener(new MouseListener() {
+       /* w.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
 
@@ -326,15 +291,19 @@ public class test {
 
             }
         });
+        */
         w.requestFocus();
         w.setLocation(0, 0);
         w.setVisible(true);
+        System.out.println("Scihtbar");
         try {
             Thread.sleep(50000);
         } catch (InterruptedException e) {
             System.out.println(e);
         }
         w.dispose();
+        if(true)
+            return;
        /* f1 = new JFrame();
         f1.setDefaultCloseOperation(0);
         f1.setSize(dim);
@@ -354,6 +323,45 @@ public class test {
         f1.setAlwaysOnTop(true);
         f1.setVisible(true);
         */
+        GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook();
+
+        keyboardHook.addKeyListener(new GlobalKeyAdapter() {
+            @Override
+            public void keyPressed(GlobalKeyEvent event) {
+                System.out.println(event.getKeyChar());
+
+                if (event.getVirtualKeyCode() == GlobalKeyEvent.VK_ESCAPE) {
+                    run = false;
+
+                }
+                if (event.getVirtualKeyCode() == GlobalKeyEvent.VK_LWIN) {
+                    try {
+                        Robot carl = new Robot();
+                        //carl.keyPress(KeyEvent.VK_WINDOWS);
+                        carl.keyRelease(KeyEvent.VK_WINDOWS);
+                    } catch (Exception e) {
+                        System.out.println("oh noo");
+                    }
+                }
+
+            }
+
+            @Override
+            public void keyReleased(GlobalKeyEvent event) {
+                //PressKey.client.sendMessage(new ChatMessage(4, event.getVirtualKeyCode(),false));
+            }
+        });
+
+
+        try {
+            while (run) Thread.sleep(128);
+        } catch (InterruptedException e) { /* nothing to do here */ } finally {
+            keyboardHook.shutdownHook();
+        }
+
+
+        if (true)
+            return;
         if (true)
             return;
 

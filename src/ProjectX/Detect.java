@@ -37,7 +37,7 @@ public class Detect implements Runnable {
             default:
             case 0:
                 bot.sendNachricht("Thread detected!\nAlarm.");
-                bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode Omega 0267");
+                bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode Omega 0267" ,false);
                 if (bot.getConfig().isCamera())
                     bot.takepic(true);
                 break;
@@ -45,7 +45,7 @@ public class Detect implements Runnable {
                 bot.sendNachricht("Thread detected! PC locked!");
                 try {
                     Runtime.getRuntime().exec("C:\\Windows\\System32\\rundll32.exe user32.dll,LockWorkStation");
-                    bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode alpha 0183");
+                    bot.tts("Security Breach detected! You have been classified as an intruder! Step away from this device immediately or further actions will be taken. Activating Security mode alpha 0183",false);
                     if (bot.getConfig().isCamera())
                         bot.takepic(true);
                 } catch (IOException e) {

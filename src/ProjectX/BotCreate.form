@@ -89,7 +89,7 @@
         <properties>
           <background color="-13190411"/>
           <selected value="true"/>
-          <text value="Ghosty Chat"/>
+          <text value="Ghosty Chat (BETA)"/>
           <toolTipText value="A neat Chat Client to talk with other Users"/>
         </properties>
       </component>

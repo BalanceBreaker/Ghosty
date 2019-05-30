@@ -22,6 +22,8 @@ public class LowRam implements Runnable {
                 Thread.sleep(5000);
                 long elapsedTimeMillis = System.currentTimeMillis() - last;
                 float elapsedTimeMin = elapsedTimeMillis / (60 * 1000F);
+                if(bot.changedC)
+                    bot.writeRealConf();
                 if (bot.changed)
                     bot.writeConf();
                 if (System.currentTimeMillis() - lastc > 20000) {
@@ -38,7 +40,7 @@ public class LowRam implements Runnable {
                 if (!batteryStatus.getBatteryLifePercent().startsWith("U")) {
                     int proz = Integer.parseInt(batteryStatus.getBatteryLifePercent().replace("%", ""));
                     if (proz <= 20 && !bat) {
-                        bot.tts("Warning! Low battery detected. Less than " + batteryStatus.getBatteryLifePercent() + " left. I recommend recharging your device.");
+                        bot.tts("Warning! Low battery detected. Less than " + batteryStatus.getBatteryLifePercent() + " left. I recommend recharging your device.", false);
                         bot.sendNachricht("Warning!\nBattery level is low! (" + batteryStatus.getBatteryLifePercent() + ")");
                         bat = true;
                     }
@@ -46,7 +48,7 @@ public class LowRam implements Runnable {
                         bat = false;
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                bot.sendNachrichtAdmin(e.toString());
             }
         }
     }
