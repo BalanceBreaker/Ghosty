@@ -4,9 +4,9 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.generics.BotSession;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
+import org.telegram.telegrambots.meta.generics.BotSession;
 
 import javax.swing.*;
 import java.awt.*;
@@ -153,7 +153,7 @@ public class BotCreate {
                     TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
                     BotSession sup;
                     sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + "Config is null!"));
-                    sup.close();
+                    sup.stop();
                 } catch (Exception e) {
 
                 }
@@ -174,7 +174,7 @@ public class BotCreate {
                 TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
                 BotSession sup;
                 sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + e.toString()));
-                sup.close();
+                sup.stop();
             } catch (Exception ex) {
 
             }
@@ -194,7 +194,7 @@ public class BotCreate {
                 TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
                 BotSession sup;
                 sup = telegramBotsApi.registerBot(new SupBot("Fehler:" + "\n" + e.toString()));
-                sup.close();
+                sup.stop();
             } catch (Exception ex) {
 
             }

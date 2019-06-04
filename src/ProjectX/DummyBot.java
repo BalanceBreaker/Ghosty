@@ -1,12 +1,11 @@
 package ProjectX;
 
 import com.github.sarxos.webcam.Webcam;
-import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.generics.LongPollingBot;
+
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -75,7 +74,7 @@ public class DummyBot extends TelegramLongPollingBot {
         TestNachricht.setChatId(chatid + "");
         TestNachricht.setText(nachricht);
         try {
-            sendMessage(TestNachricht);
+            execute(TestNachricht);
         } catch (Exception e) {
             e.printStackTrace();
         }

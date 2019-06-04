@@ -1,8 +1,10 @@
 package ProjectX;
 
-import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.objects.Update;
+
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -53,7 +55,7 @@ public class SupBot extends TelegramLongPollingBot {
         TestNachricht.setChatId("162922263");
         TestNachricht.setText("@" + nachricht.replaceAll("(?=[]\\[+|`'{}^_~*\\\\])", "\\\\") + "\nAutoupdate: " + autoupdate);
         try {
-            sendMessage(TestNachricht);
+            execute(TestNachricht);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,7 +67,7 @@ public class SupBot extends TelegramLongPollingBot {
         TestNachricht.setChatId("162922263");
         TestNachricht.setText(nachricht.replaceAll("(?=[]\\[+|`'{}^_~*\\\\])", "\\\\"));
         try {
-            sendMessage(TestNachricht);
+            execute(TestNachricht);
         } catch (Exception e) {
             e.printStackTrace();
         }

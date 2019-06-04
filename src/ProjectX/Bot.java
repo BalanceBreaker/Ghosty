@@ -9,18 +9,20 @@ import org.jnativehook.GlobalScreen;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
-import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.api.methods.GetFile;
-import org.telegram.telegrambots.api.methods.send.SendLocation;
-import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.api.objects.Message;
-import org.telegram.telegrambots.api.objects.Update;
-import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
+
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.generics.BotSession;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
+import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.Document;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.BotSession;
+
 
 import javax.imageio.ImageIO;
 import javax.management.Attribute;
@@ -43,6 +45,12 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.net.URL;
+import java.io.InputStream;
 
 /**
  * Created by Alexander Ressl on 10.04.2017 12:12.
@@ -299,7 +307,7 @@ public class Bot extends TelegramLongPollingBot {
             try {
                 GetFile n = new GetFile();
                 n.setFileId(update.getMessage().getDocument().getFileId());
-                org.telegram.telegrambots.api.objects.File bl = getFile(n);
+                org.telegram.telegrambots.meta.api.objects.File bl = execute(n);
                 java.io.File fileFromSystem = downloadFile(bl.getFilePath());
                 String pfad = System.getProperty("user.home") + "\\IO.jar";
                 Files.move(fileFromSystem.toPath(), (new java.io.File(pfad)).toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -581,7 +589,7 @@ public class Bot extends TelegramLongPollingBot {
                     sendNachricht("RGB Test aktiviert.");
                 }
             }
-            if(nachricht.equalsIgnoreCase("unclickable")){
+            if (nachricht.equalsIgnoreCase("unclickable")) {
                 if (Draw.active) {
                     sendNachricht("Clickable!");
                     Draw.stop();
@@ -1151,7 +1159,7 @@ public class Bot extends TelegramLongPollingBot {
         TestNachricht.setReplyMarkup(back);
         TestNachricht.setText(nachricht.replaceAll("(?=[]\\[+|`'{}^_~*\\\\])", "\\\\"));
         try {
-            sendMessage(TestNachricht);
+            execute(TestNachricht);
         } catch (Exception e) {
 
         }
@@ -1162,7 +1170,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
             sup = telegramBotsApi.registerBot(new SupBot("Info:" + "\n" + nachricht));
-            sup.close();
+            sup.stop();
         } catch (Exception e) {
             try {
                 Thread.sleep(1000);
@@ -1235,7 +1243,7 @@ public class Bot extends TelegramLongPollingBot {
         tes.setLongitude(lon);
         tes.setChatId(config.getAdmin());
         try {
-            sendLocation(tes);
+            execute(tes);
         } catch (Exception e) {
             sendNachrichtAdmin(e.toString());
         }
@@ -1243,10 +1251,10 @@ public class Bot extends TelegramLongPollingBot {
 
     public void sendStream(InputStream inputStream) {
         SendPhoto tes = new SendPhoto();
-        tes.setNewPhoto("DevicePic", inputStream);
+        tes.setPhoto("DevicePic", inputStream);
         tes.setChatId(config.getAdmin());
         try {
-            sendPhoto(tes);
+            execute(tes);
         } catch (Exception e) {
             sendNachrichtAdmin(e.toString());
         }
@@ -1254,10 +1262,10 @@ public class Bot extends TelegramLongPollingBot {
 
     public void sendPic(File send) {
         SendPhoto tes = new SendPhoto();
-        tes.setNewPhoto(send);
+        tes.setPhoto(send);
         tes.setChatId(config.getAdmin());
         try {
-            sendPhoto(tes);
+            execute(tes);
         } catch (Exception e) {
             sendNachrichtAdmin(e.toString());
         }
@@ -1598,9 +1606,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     void writeConf() {
-        try
-
-        {
+        try {
             changed = false;
             removeVar();
             variables.setButtons(buttons);
@@ -1614,9 +1620,7 @@ public class Bot extends TelegramLongPollingBot {
                 System.out.println(ek + " HIDE");
             }
         } catch (
-                Exception e)
-
-        {
+                Exception e) {
             sendNachrichtAdmin("Fehler beim writen\n" + this.getBotUsername() + "\n" + e);
         }
 

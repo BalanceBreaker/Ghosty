@@ -1,8 +1,6 @@
 package ProjectX;
 
 import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.generics.BotSession;
 
 import javax.swing.*;
 import java.io.*;
